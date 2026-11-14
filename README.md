@@ -29,3 +29,9 @@ A browser-based tool for quickly packing your HTML file into a ready-to-use Andr
 2. Open `index.html` in your web browser.
 3. Select the base template APK and your HTML file.
 4. Click the build button and download your generated APK.
+
+## License
+
+Copyright (C) 2026 Denis Artuck ([internet-off](https://github.com))
+
+This program is free software: you can redistribute it and/or modify it under the terms of the **GNU Affero General Public License v3.0** (AGPL-3.0) as published by the Free Software Foundation. See the [LICENSE](LICENSE) file for details.

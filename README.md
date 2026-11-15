@@ -1,37 +1,36 @@
-# html-html-to-apk-
-Browser-based tool to pack an HTML file into a template APK.
 # HTML to APK Сборщик / HTML to APK Builder
 
-Веб-инструмент для быстрой упаковки вашего HTML-файла в готовое Android-приложение (APK) прямо в браузере.
+Веб-инструмент для упаковки HTML, CSS и JS файлов в подписанное Android-приложение (APK) прямо в браузере.
 
-### Что внутри репозитория
-* **`index.html`** — сам инструмент. Откройте его в любом браузере на телефоне или ПК.
-* **Базовый `.apk`** — готовый APK-шаблон («пустышка») для быстрой сборки без настройки.
-* **`pro-template-source-v2.zip`** — исходники шаблона для продвинутых пользователей (можно прописать нужные разрешения Android, поменять иконки и собрать свой шаблон через Termux).
+### Основные файлы репозитория
+- **index.html** — основной инструмент сборки и подписи.
+- **template.apk** — базовый APK-шаблон.
+- **template-source/** и **pro-template-source-v2.zip** — исходные коды шаблона и их архив для настройки через Termux.
+- **llms.txt** — технические заметки для ИИ.
 
-### Как пользоваться
-1. Скачайте файлы репозитория (нажмите зеленую кнопку **Code** → **Download ZIP**).
-2. Откройте файл `index.html` в браузере.
-3. Выберите базовый APK-шаблон и ваш готовый HTML-файл.
-4. Нажмите кнопку сборки и скачайте готовое приложение.
+### Возможности и использование
+- **Функции:** Локальная сборка в памяти браузера, поддержка RSA-2048, кастомизация иконки и имени, нативные диалоги взамен стандартных.
+- **Как запустить:** Скачайте архив репозитория, откройте `index.html` в браузере, выберите `template.apk` вместе со своими веб-файлами, задайте параметры и нажмите **«Собрать и подписать APK»**.
+
+### JavaScript-мост `window.AndroidBridge`
+Внутри приложения доступен объект `window.AndroidBridge` с методами управления: `getInstalledBrowsers()`, `setPreferredBrowser(pkg)`, `openUrlInBrowser(url, pkg)`, `getCurrentWebViewInfo()`, `openSystemWebViewPicker()` и `setUserAgent(ua)`. Полный перечень описан в оригинальных файлах репозитория.
 
 ---
 
-A browser-based tool for quickly packing your HTML file into a ready-to-use Android application (APK).
+A browser-based tool for packing HTML, CSS, and JS files into a signed Android application (APK) directly in the browser.
 
 ### Repository Contents
-* **`index.html`** — the main builder tool. Open it in any browser on your phone or PC.
-* **Base `.apk`** — a ready-made template APK for quick building without any setup.
-* **`pro-template-source-v2.zip`** — template source code for advanced users (allows you to configure Android permissions, change icons, and build your own base APK via Termux).
+- **index.html** — main builder and signer tool.
+- **template.apk** — base template APK.
+- **template-source/** & **pro-template-source-v2.zip** — template source code and backup for advanced customization via Termux.
+- **llms.txt** — technical guidelines for AI assistants.
 
-### How to Use
-1. Download the repository files (click the green **Code** button → **Download ZIP**).
-2. Open `index.html` in your web browser.
-3. Select the base template APK and your HTML file.
-4. Click the build button and download your generated APK.
+### Features & How to Use
+- **Features:** In-browser bundling and RSA-2048 signing, custom icons/labels, and native Android dialogs.
+- **Usage:** Download the archive, open `index.html`, select `template.apk` and your web files, configure settings, and click **Build & Sign APK**.
+
+### Built-in `window.AndroidBridge` API
+The app exposes `window.AndroidBridge` to JavaScript, providing methods such as `getInstalledBrowsers()`, `setPreferredBrowser(pkg)`, `openUrlInBrowser(url, pkg)`, `getCurrentWebViewInfo()`, `openSystemWebViewPicker()`, and `setUserAgent(ua)`. Refer to the repository files for detailed specs.
 
 ## License
-
-Copyright (C) 2026 Denis Artuck ([internet-off](https://github.com))
-
-This program is free software: you can redistribute it and/or modify it under the terms of the **GNU Affero General Public License v3.0** (AGPL-3.0) as published by the Free Software Foundation. See the [LICENSE](LICENSE) file for details.
+Copyright (C) 2026 Denis Artuck (internet-off). Distributed under the **GNU Affero General Public License v3.0** (AGPL-3.0). See the LICENSE file for details.

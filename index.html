@@ -1,0 +1,2120 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>HTML to APK Builder & Signer</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --card: #161b22;
+    --card-border: #30363d;
+    --input-bg: #090c10;
+    --text: #e6edf3;
+    --text-muted: #8b949e;
+    --accent: #2f81f7;
+    --accent-hover: #58a6ff;
+    --success: #238636;
+    --success-hover: #2ea043;
+    --danger: #da3633;
+    --warning: #d29922;
+    --radius: 10px;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+    padding: 16px;
+    display: flex;
+    justify-content: center;
+  }
+  .container {
+    width: 100%;
+    max-width: 860px;
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 14px;
+    padding: 20px;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.45);
+  }
+  header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--card-border);
+    margin-bottom: 20px;
+  }
+  header h1 { font-size: 1.35rem; font-weight: 700; letter-spacing: -0.02em; }
+  .badge {
+    background: rgba(47, 129, 247, 0.15);
+    color: var(--accent-hover);
+    border: 1px solid rgba(47, 129, 247, 0.3);
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 600;
+  }
+  .step {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 14px;
+  }
+  .step-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--accent-hover);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .row:last-child { margin-bottom: 0; }
+  input[type="text"], input[type="number"], select, textarea {
+    flex: 1 1 200px;
+    background: var(--input-bg);
+    border: 1px solid var(--card-border);
+    color: var(--text);
+    padding: 9px 12px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+  textarea { min-height: 76px; resize: vertical; font-family: var(--font-mono); font-size: 0.82rem; }
+  input[type="file"] {
+    flex: 1 1 220px;
+    background: var(--input-bg);
+    border: 1px dashed var(--card-border);
+    color: var(--text-muted);
+    padding: 7px 10px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+  button {
+    background: #21262d;
+    color: var(--text);
+    border: 1px solid var(--card-border);
+    padding: 9px 14px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  button:hover { background: #30363d; border-color: #8b949e; }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  button.primary:hover { background: var(--accent-hover); }
+  button.build-btn {
+    width: 100%;
+    padding: 14px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    background: var(--success);
+    border-color: var(--success);
+    color: #fff;
+    margin-top: 6px;
+  }
+  button.build-btn:hover { background: var(--success-hover); }
+  .hint { font-size: 0.8rem; color: var(--text-muted); margin-top: 6px; }
+  .status-pill {
+    font-size: 0.78rem;
+    padding: 2px 8px;
+    border-radius: 6px;
+    background: #21262d;
+    color: var(--text-muted);
+  }
+  .status-pill.ok { background: rgba(35,134,54,0.2); color: #3fb950; border: 1px solid rgba(63,185,80,0.3); }
+  .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px; }
+  .manifest-box {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--card-border);
+    display: none;
+  }
+  .perm-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 6px;
+    max-height: 170px;
+    overflow-y: auto;
+    background: var(--input-bg);
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid var(--card-border);
+    margin: 8px 0;
+  }
+  .perm-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    font-family: var(--font-mono);
+    word-break: break-all;
+  }
+  .meta-list { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+  .meta-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .meta-key { font-family: var(--font-mono); font-size: 0.8rem; color: #79c0ff; min-width: 180px; }
+  .icon-preview-wrap { display: flex; align-items: center; gap: 12px; margin-top: 8px; }
+  #icon-preview {
+    width: 56px; height: 56px; border-radius: 12px;
+    border: 1px solid var(--card-border); background: var(--input-bg); object-fit: cover;
+  }
+  .terminal {
+    margin-top: 16px;
+    background: #05070a;
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius);
+    padding: 12px;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: #c9d1d9;
+    height: 220px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .log-info { color: #58a6ff; }
+  .log-ok { color: #3fb950; }
+  .log-warn { color: #d29922; }
+  .log-err { color: #f85149; }
+  @media (max-width: 540px) {
+    body { padding: 8px; }
+    .container { padding: 14px; }
+    button { width: 100%; }
+    .row input + button { width: auto; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>📦 HTML to APK Builder &amp; Signer</h1>
+    <span class="badge">100% Client-Side • Web Crypto • Zipalign • v1/v2 Sign</span>
+  </header>
+
+  <div class="step">
+    <div class="step-title">
+      <span>0. Единый конфиг сборки (.json)</span>
+      <button type="button" id="btn-save-cfg">💾 Сохранить конфиг (.json)</button>
+    </div>
+    <div class="row">
+      <input type="text" id="cfg-url" placeholder="https://... (ссылка на config.json)">
+      <button type="button" id="btn-load-cfg">Загрузить конфиг (.json)</button>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-title">
+      <span>1. Базовый шаблон (template.apk)</span>
+      <span class="status-pill" id="tpl-status">Не загружен</span>
+    </div>
+    <div class="row">
+      <input type="file" id="tpl-file" accept=".apk,application/vnd.android.package-archive">
+    </div>
+    <div class="row">
+      <input type="text" id="tpl-url" placeholder="https://... (прямая ссылка на template.apk)">
+      <button type="button" id="btn-load-tpl">Загрузить URL</button>
+    </div>
+
+    <div class="manifest-box" id="manifest-editor">
+      <div class="hint" style="margin-bottom:6px;color:#e6edf3;font-weight:600;">Разрешения (&lt;uses-permission&gt;):</div>
+      <div class="perm-list" id="perm-list"></div>
+      <div class="row">
+        <input type="text" id="new-perm-input" placeholder="android.permission.CAMERA">
+        <button type="button" id="btn-add-perm">+ Добавить право</button>
+      </div>
+
+      <div id="meta-section" style="margin-top:12px;display:none;">
+        <div class="hint" style="margin-bottom:6px;color:#e6edf3;font-weight:600;">Метаданные (&lt;meta-data&gt;):</div>
+        <div class="meta-list" id="meta-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-title">
+      <span>2. Веб-файлы (HTML / CSS / JS / медиа в assets/www/)</span>
+      <span class="status-pill" id="web-status">0 файлов</span>
+    </div>
+    <div class="row">
+      <input type="file" id="web-files" multiple>
+    </div>
+    <div class="row">
+      <textarea id="web-urls" placeholder="Вставьте ссылки на файлы (по одной на строку или через запятую)&#10;https://..."></textarea>
+    </div>
+    <div class="row">
+      <button type="button" id="btn-load-web-urls">Загрузить файлы по URL</button>
+      <button type="button" id="btn-clear-web">Очистить список</button>
+    </div>
+    <div class="hint" id="web-files-list">Если загружен 1 .html файл, он сохранится как assets/www/index.html.</div>
+  </div>
+
+  <div class="step">
+    <div class="step-title">
+      <span>3. Иконка приложения (необязательно, 192×192 PNG + WebP)</span>
+      <span class="status-pill" id="icon-status">Из шаблона</span>
+    </div>
+    <div class="row">
+      <input type="file" id="icon-file" accept="image/*">
+    </div>
+    <div class="row">
+      <input type="text" id="icon-url" placeholder="https://... (ссылка на изображение)">
+      <button type="button" id="btn-load-icon">Загрузить URL</button>
+    </div>
+    <div class="icon-preview-wrap" id="icon-preview-box" style="display:none;">
+      <img id="icon-preview" alt="Icon Preview">
+      <span class="hint">Готово: сгенерированы PNG и WebP (0.92) 192×192 для замены в res/</span>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-title"><span>4. Параметры приложения и манифеста</span></div>
+    <div class="grid-2">
+      <div>
+        <div class="hint" style="margin-bottom:4px;">Название приложения (app-label):</div>
+        <div class="row">
+          <input type="text" id="app-label" placeholder="Моё приложение">
+          <button type="button" data-fetch-txt="app-label" title="Загрузить текст из .txt по URL">🔗 URL</button>
+        </div>
+      </div>
+      <div>
+        <div class="hint" style="margin-bottom:4px;">Имя пакета (Package Name):</div>
+        <div class="row">
+          <input type="text" id="pkg-name" placeholder="com.my.app">
+          <button type="button" id="btn-rand-pkg" title="Случайный пакет">🎲</button>
+          <button type="button" data-fetch-txt="pkg-name" title="Загрузить из .txt по URL">🔗 URL</button>
+        </div>
+      </div>
+      <div>
+        <div class="hint" style="margin-bottom:4px;">Version Code (целое число):</div>
+        <div class="row">
+          <input type="number" id="version-code" value="1" min="1">
+          <button type="button" id="btn-inc-vc">+1</button>
+          <button type="button" data-fetch-txt="version-code" title="Загрузить из .txt по URL">🔗 URL</button>
+        </div>
+      </div>
+      <div>
+        <div class="hint" style="margin-bottom:4px;">Version Name (строка):</div>
+        <div class="row">
+          <input type="text" id="version-name" value="1.0.0">
+          <button type="button" data-fetch-txt="version-name" title="Загрузить из .txt по URL">🔗 URL</button>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:10px;">
+      <div class="hint" style="margin-bottom:4px;">5. Имя выходного файла (без .apk):</div>
+      <div class="row">
+        <input type="text" id="apk-filename" value="app-release-signed">
+        <button type="button" data-fetch-txt="apk-filename" title="Загрузить из .txt по URL">🔗 URL</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-title"><span>6 &amp; 7. Схема подписи и криптографический ключ</span></div>
+    <div class="row">
+      <select id="sig-scheme">
+        <option value="v1v2" selected>v1 + v2 (Рекомендуется для всех версий Android)</option>
+        <option value="v1">Только v1 JAR (META-INF)</option>
+        <option value="v2">Только v2 APK Signature Scheme (Android 7.0+)</option>
+      </select>
+      <button type="button" id="btn-fetch-scheme" title="Загрузить схему (v1 / v2 / v1v2) по URL">🔗 URL</button>
+    </div>
+
+    <div class="row" style="margin-top:10px;">
+      <select id="key-mode">
+        <option value="generate" selected>Сгенерировать новый случайный ключ (RSA-2048)</option>
+        <option value="custom">Загрузить свой ключ (.pem из файла или по URL)</option>
+      </select>
+    </div>
+
+    <div id="custom-key-box" style="display:none; margin-top:10px;">
+      <div class="hint" style="margin-bottom:4px;">Приватный ключ PKCS#8 (private.pem):</div>
+      <div class="row">
+        <input type="file" id="priv-key-file" accept=".pem,.key,.pk8">
+        <input type="text" id="priv-key-url" placeholder="https://... (ссылка на private.pem)">
+        <button type="button" id="btn-load-priv">URL</button>
+      </div>
+      <div class="hint" style="margin-bottom:4px;">Сертификат X.509 (cert.pem):</div>
+      <div class="row">
+        <input type="file" id="cert-file" accept=".pem,.crt,.cer">
+        <input type="text" id="cert-url" placeholder="https://... (ссылка на cert.pem)">
+        <button type="button" id="btn-load-cert">URL</button>
+      </div>
+    </div>
+
+    <div id="generated-key-actions" style="display:none; margin-top:10px;">
+      <div class="row">
+        <span class="status-pill ok">Ключ RSA-2048 сгенерирован</span>
+        <button type="button" id="btn-dl-priv">⬇ Скачать private.pem</button>
+        <button type="button" id="btn-dl-cert">⬇ Скачать cert.pem</button>
+      </div>
+    </div>
+  </div>
+
+  <button type="button" class="build-btn" id="btn-build">🚀 Собрать и подписать APK</button>
+
+  <div class="terminal" id="terminal"></div>
+</div>
+
+<script>
+'use strict';
+
+// === ИЗОЛИРОВАННАЯ ФУНКЦИЯ НОРМАЛИЗАЦИИ ССЫЛОК ===
+function normalizeGitHubUrl(url) {
+  let clean = url.trim();
+  const ghHost = atob('Z2l0aHViLmNvbS8=');
+  const rawHost = atob('cmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbS8=');
+  if (clean.includes(ghHost)) {
+    clean = clean
+      .replace(ghHost, rawHost)
+      .replace('/raw/refs/heads/', '/')
+      .replace('/blob/refs/heads/', '/')
+      .replace('/blob/', '/')
+      .replace('/raw/', '/');
+  }
+  return clean;
+}
+
+// === ГЛОБАЛЬНОЕ СОСТОЯНИЕ ПРИЛОЖЕНИЯ ===
+const AppState = {
+  templateBytes: null,
+  zipEntries: [],        // Распакованные записи из template.apk
+  manifestInfo: null,    // Распарсенный AXML
+  webFiles: new Map(),   // filename -> Uint8Array
+  iconPng: null,         // Uint8Array (192x192 PNG)
+  iconWebp: null,        // Uint8Array (192x192 WebP)
+  customPrivPem: '',
+  customCertPem: '',
+  lastGenPrivPem: '',
+  lastGenCertPem: ''
+};
+
+// === ЛОГГЕР В ТЕРМИНАЛ ===
+const termEl = document.getElementById('terminal');
+function log(msg, type = 'info') {
+  const ts = new Date().toLocaleTimeString('ru-RU', { hour12: false });
+  const line = document.createElement('div');
+  line.className = 'log-' + type;
+  line.textContent = `[${ts}] ${msg}`;
+  termEl.appendChild(line);
+  termEl.scrollTop = termEl.scrollHeight;
+}
+
+// === БАЗОВЫЕ УТИЛИТЫ ===
+const textEncoder = new TextEncoder();
+const textDecoder = new TextDecoder('utf-8');
+
+function concatUint8(arrays) {
+  let total = 0;
+  for (const a of arrays) total += a.length;
+  const out = new Uint8Array(total);
+  let offset = 0;
+  for (const a of arrays) {
+    out.set(a, offset);
+    offset += a.length;
+  }
+  return out;
+}
+
+async function fetchBytes(rawUrl) {
+  const url = normalizeGitHubUrl(rawUrl);
+  if (!url) throw new Error('Пустой URL');
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`HTTP ${res.status} при загрузке ${url}`);
+  const buf = await res.arrayBuffer();
+  return new Uint8Array(buf);
+}
+
+async function fetchText(rawUrl) {
+  const bytes = await fetchBytes(rawUrl);
+  return textDecoder.decode(bytes).trim();
+}
+
+function downloadBlob(bytes, filename, mime = 'application/octet-stream') {
+  const blob = new Blob([bytes], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+}
+
+// === ОБРАБОТЧИКИ UI: КОНФИГ И ТЕКСТОВЫЕ ПОЛЯ ===
+document.getElementById('btn-rand-pkg').addEventListener('click', () => {
+  const rnd = Math.floor(100000 + Math.random() * 900000);
+  document.getElementById('pkg-name').value = `com.app.id${rnd}`;
+});
+
+document.getElementById('btn-inc-vc').addEventListener('click', () => {
+  const el = document.getElementById('version-code');
+  el.value = (parseInt(el.value, 10) || 0) + 1;
+});
+
+document.querySelectorAll('[data-fetch-txt]').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    const targetId = btn.getAttribute('data-fetch-txt');
+    const url = prompt('Введите ссылку на .txt файл:');
+    if (!url) return;
+    try {
+      const txt = await fetchText(url);
+      document.getElementById(targetId).value = txt;
+      log(`Загружено значение для #${targetId}: "${txt}"`, 'ok');
+    } catch (e) {
+      log(`Ошибка загрузки текста: ${e.message}`, 'err');
+    }
+  });
+});
+
+document.getElementById('btn-fetch-scheme').addEventListener('click', async () => {
+  const url = prompt('Введите ссылку на .txt со схемой (v1, v2 или v1v2):');
+  if (!url) return;
+  try {
+    const val = (await fetchText(url)).toLowerCase().replace(/[^a-z0-9]/g, '');
+    const sel = document.getElementById('sig-scheme');
+    if (val === 'v1' || val === 'v2' || val === 'v1v2') {
+      sel.value = val;
+      log(`Установлена схема подписи: ${val}`, 'ok');
+    } else {
+      throw new Error(`Неизвестная схема "${val}". Ожидается v1, v2 или v1v2`);
+    }
+  } catch (e) {
+    log(`Ошибка загрузки схемы: ${e.message}`, 'err');
+  }
+});
+
+document.getElementById('key-mode').addEventListener('change', (e) => {
+  document.getElementById('custom-key-box').style.display = e.target.value === 'custom' ? 'block' : 'none';
+});
+
+document.getElementById('btn-save-cfg').addEventListener('click', () => {
+  const cfg = {
+    templateUrl: document.getElementById('tpl-url').value.trim(),
+    webUrls: document.getElementById('web-urls').value.trim(),
+    iconUrl: document.getElementById('icon-url').value.trim(),
+    appLabel: document.getElementById('app-label').value.trim(),
+    pkgName: document.getElementById('pkg-name').value.trim(),
+    versionCode: parseInt(document.getElementById('version-code').value, 10) || 1,
+    versionName: document.getElementById('version-name').value.trim(),
+    apkFilename: document.getElementById('apk-filename').value.trim(),
+    sigScheme: document.getElementById('sig-scheme').value,
+    privKeyUrl: document.getElementById('priv-key-url').value.trim(),
+    certUrl: document.getElementById('cert-url').value.trim()
+  };
+  const jsonBytes = textEncoder.encode(JSON.stringify(cfg, null, 2));
+  downloadBlob(jsonBytes, 'apk-build-config.json', 'application/json');
+  log('Конфиг сборки сохранен в apk-build-config.json', 'ok');
+});
+
+document.getElementById('btn-load-cfg').addEventListener('click', async () => {
+  const url = document.getElementById('cfg-url').value.trim();
+  if (!url) return log('Укажите URL конфига (.json)', 'warn');
+  try {
+    log('Загрузка конфига сборки...');
+    const raw = await fetchText(url);
+    const cfg = JSON.parse(raw);
+    if (cfg.templateUrl) document.getElementById('tpl-url').value = cfg.templateUrl;
+    if (cfg.webUrls) {
+      document.getElementById('web-urls').value = Array.isArray(cfg.webUrls) ? cfg.webUrls.join('\n') : cfg.webUrls;
+    }
+    if (cfg.iconUrl) document.getElementById('icon-url').value = cfg.iconUrl;
+    if (cfg.appLabel) document.getElementById('app-label').value = cfg.appLabel;
+    if (cfg.pkgName) document.getElementById('pkg-name').value = cfg.pkgName;
+    if (cfg.versionCode !== undefined) document.getElementById('version-code').value = cfg.versionCode;
+    if (cfg.versionName) document.getElementById('version-name').value = cfg.versionName;
+    if (cfg.apkFilename) document.getElementById('apk-filename').value = cfg.apkFilename;
+    if (cfg.sigScheme) document.getElementById('sig-scheme').value = cfg.sigScheme;
+    if (cfg.privKeyUrl || cfg.certUrl) {
+      document.getElementById('key-mode').value = 'custom';
+      document.getElementById('custom-key-box').style.display = 'block';
+      if (cfg.privKeyUrl) document.getElementById('priv-key-url').value = cfg.privKeyUrl;
+      if (cfg.certUrl) document.getElementById('cert-url').value = cfg.certUrl;
+    }
+    log('Конфиг успешно применен к полям формы.', 'ok');
+    if (cfg.templateUrl) await loadTemplateFromUrl(cfg.templateUrl);
+    if (cfg.webUrls) await loadWebFilesFromUrls();
+    if (cfg.iconUrl) await loadIconFromUrl(cfg.iconUrl);
+    if (cfg.privKeyUrl) await loadCustomKeyUrl('priv', cfg.privKeyUrl);
+    if (cfg.certUrl) await loadCustomKeyUrl('cert', cfg.certUrl);
+  } catch (e) {
+    log(`Ошибка разбора конфига: ${e.message}`, 'err');
+  }
+});
+// === CRC32 И ПОТОКОВАЯ РАСПАКОВКА DEFLATE ===
+const CRC32_TABLE = (() => {
+  const table = new Uint32Array(256);
+  for (let i = 0; i < 256; i++) {
+    let c = i;
+    for (let k = 0; k < 8; k++) {
+      c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+    }
+    table[i] = c >>> 0;
+  }
+  return table;
+})();
+
+function crc32(bytes) {
+  let crc = 0xFFFFFFFF;
+  for (let i = 0; i < bytes.length; i++) {
+    crc = CRC32_TABLE[(crc ^ bytes[i]) & 0xFF] ^ (crc >>> 8);
+  }
+  return (crc ^ 0xFFFFFFFF) >>> 0;
+}
+
+async function inflateRaw(compressedBytes) {
+  const ds = new DecompressionStream('deflate-raw');
+  const writer = ds.writable.getWriter();
+  writer.write(compressedBytes);
+  writer.close();
+  const reader = ds.readable.getReader();
+  const chunks = [];
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    if (value) chunks.push(value);
+  }
+  return concatUint8(chunks);
+}
+// === БИНАРНЫЙ ZIP-ПАРСЕР ===
+async function parseZip(zipBytes) {
+  const view = new DataView(zipBytes.buffer, zipBytes.byteOffset, zipBytes.byteLength);
+  let eocdOffset = -1;
+  const minOffset = Math.max(0, zipBytes.length - 65557);
+
+  for (let i = zipBytes.length - 22; i >= minOffset; i--) {
+    if (view.getUint32(i, true) === 0x06054b50) {
+      eocdOffset = i;
+      break;
+    }
+  }
+  if (eocdOffset === -1) throw new Error('Не найден заголовок ZIP EOCD (поврежденный APK)');
+
+  const cdEntriesCount = view.getUint16(eocdOffset + 10, true);
+  const cdOffset = view.getUint32(eocdOffset + 16, true);
+
+  const entries = [];
+  let ptr = cdOffset;
+
+  for (let i = 0; i < cdEntriesCount; i++) {
+    if (view.getUint32(ptr, true) !== 0x02014b50) {
+      throw new Error(`Неверная сигнатура Central Directory по смещению ${ptr}`);
+    }
+    const method = view.getUint16(ptr + 10, true);
+    const modTime = view.getUint16(ptr + 12, true);
+    const modDate = view.getUint16(ptr + 14, true);
+    const expectedCrc = view.getUint32(ptr + 16, true);
+    const compSize = view.getUint32(ptr + 20, true);
+    const uncompSize = view.getUint32(ptr + 24, true);
+    const nameLen = view.getUint16(ptr + 28, true);
+    const extraLen = view.getUint16(ptr + 30, true);
+    const commentLen = view.getUint16(ptr + 32, true);
+    const localHeaderOffset = view.getUint32(ptr + 42, true);
+
+    const nameBytes = zipBytes.subarray(ptr + 46, ptr + 46 + nameLen);
+    const name = textDecoder.decode(nameBytes);
+    ptr += 46 + nameLen + extraLen + commentLen;
+
+    // Пропускаем директории и старые подписи из META-INF
+    if (name.endsWith('/')) continue;
+    if (/^META-INF\/(MANIFEST\.MF|.*\.(SF|RSA|DSA|EC))$/i.test(name)) continue;
+
+    if (view.getUint32(localHeaderOffset, true) !== 0x04034b50) {
+      throw new Error(`Неверный Local File Header для ${name}`);
+    }
+    const lNameLen = view.getUint16(localHeaderOffset + 26, true);
+    const lExtraLen = view.getUint16(localHeaderOffset + 28, true);
+    const dataStart = localHeaderOffset + 30 + lNameLen + lExtraLen;
+    const rawSlice = zipBytes.slice(dataStart, dataStart + compSize);
+
+    let data;
+    if (method === 0) {
+      data = rawSlice;
+    } else if (method === 8) {
+      data = await inflateRaw(rawSlice);
+    } else {
+      throw new Error(`Неподдерживаемый метод сжатия ZIP (${method}) для ${name}`);
+    }
+
+    entries.push({
+      name,
+      data,
+      crc: expectedCrc || crc32(data),
+      modTime,
+      modDate
+    });
+  }
+
+  return entries;
+}
+// === СБОРЩИК ZIP С ZIPALIGN (4 БАЙТА) ===
+function buildAlignedZip(entries) {
+  const localParts = [];
+  const cdParts = [];
+  let currentOffset = 0;
+
+  for (const entry of entries) {
+    const nameBytes = textEncoder.encode(entry.name);
+    const data = entry.data;
+    const crc = crc32(data);
+    const modTime = entry.modTime || 0x0021;
+    const modDate = entry.modDate || 0x5821;
+
+    // Все записи храним без сжатия (method = 0, STORE) и выравниваем по границе 4 байт
+    const headerBaseLen = 30 + nameBytes.length;
+    const rawDataStart = currentOffset + headerBaseLen;
+    const rem = rawDataStart % 4;
+    let extraField = new Uint8Array(0);
+
+    if (rem !== 0) {
+      let pad = 4 - rem;
+      // Для валидного TLV (2 байта ID + 2 байта Size) нужно минимум 4 байта; если не хватает — добавляем +4
+      if (pad < 4) pad += 4;
+      extraField = new Uint8Array(pad);
+      const ev = new DataView(extraField.buffer);
+      ev.setUint16(0, 0xFFFF, true);       // Private/Android Zipalign Extra Field ID
+      ev.setUint16(2, pad - 4, true);      // Длина полезных данных TLV
+    }
+
+    const localHeader = new Uint8Array(30 + nameBytes.length + extraField.length);
+    const lv = new DataView(localHeader.buffer);
+    lv.setUint32(0, 0x04034b50, true);     // Local file header signature
+    lv.setUint16(4, 20, true);             // Version needed to extract (2.0)
+    lv.setUint16(6, 0x0800, true);         // General purpose bit flag (UTF-8 filename)
+    lv.setUint16(8, 0, true);              // Compression method: 0 (STORE)
+    lv.setUint16(10, modTime, true);
+    lv.setUint16(12, modDate, true);
+    lv.setUint32(14, crc, true);
+    lv.setUint32(18, data.length, true);   // Compressed size
+    lv.setUint32(22, data.length, true);   // Uncompressed size
+    lv.setUint16(26, nameBytes.length, true);
+    lv.setUint16(28, extraField.length, true);
+    localHeader.set(nameBytes, 30);
+    if (extraField.length > 0) localHeader.set(extraField, 30 + nameBytes.length);
+
+    localParts.push(localHeader, data);
+
+    // Central Directory Header
+    const cdHeader = new Uint8Array(46 + nameBytes.length);
+    const cv = new DataView(cdHeader.buffer);
+    cv.setUint32(0, 0x02014b50, true);     // Central file header signature
+    cv.setUint16(4, 20, true);             // Version made by
+    cv.setUint16(6, 20, true);             // Version needed to extract
+    cv.setUint16(8, 0x0800, true);         // UTF-8 flag
+    cv.setUint16(10, 0, true);             // Method: STORE
+    cv.setUint16(12, modTime, true);
+    cv.setUint16(14, modDate, true);
+    cv.setUint32(16, crc, true);
+    cv.setUint32(20, data.length, true);
+    cv.setUint32(24, data.length, true);
+    cv.setUint16(28, nameBytes.length, true);
+    cv.setUint16(30, 0, true);             // Extra field length in CD = 0
+    cv.setUint16(32, 0, true);             // File comment length
+    cv.setUint16(34, 0, true);             // Disk number start
+    cv.setUint16(36, 0, true);             // Internal file attributes
+    cv.setUint32(38, 0, true);             // External file attributes
+    cv.setUint32(42, currentOffset, true); // Relative offset of local header
+    cdHeader.set(nameBytes, 46);
+
+    cdParts.push(cdHeader);
+    currentOffset += localHeader.length + data.length;
+  }
+
+  const cdOffset = currentOffset;
+  const cdBytes = concatUint8(cdParts);
+  const eocd = new Uint8Array(22);
+  const eocdv = new DataView(eocd.buffer);
+  eocdv.setUint32(0, 0x06054b50, true);
+  eocdv.setUint16(4, 0, true);
+  eocdv.setUint16(6, 0, true);
+  eocdv.setUint16(8, entries.length, true);
+  eocdv.setUint16(10, entries.length, true);
+  eocdv.setUint32(12, cdBytes.length, true);
+  eocdv.setUint32(16, cdOffset, true);
+  eocdv.setUint16(20, 0, true);
+
+  return concatUint8([...localParts, cdBytes, eocd]);
+}
+// === ПАРСЕР БИНАРНОГО ANDROIDMANIFEST.XML (AXML) ===
+function parseAxmlManifest(bytes) {
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  if (view.getUint32(0, true) !== 0x00080003) {
+    throw new Error('Неверная сигнатура AXML (ожидалось 0x00080003)');
+  }
+
+  let ptr = 8;
+  let stringPoolChunk = null;
+  let resourceIdsChunk = null;
+  const bodyChunks = [];
+
+  while (ptr < bytes.length) {
+    const type = view.getUint16(ptr, true);
+    const headerSize = view.getUint16(ptr + 2, true);
+    const chunkSize = view.getUint32(ptr + 4, true);
+    const rawChunk = bytes.slice(ptr, ptr + chunkSize);
+
+    if (type === 0x0001 && !stringPoolChunk) {
+      stringPoolChunk = rawChunk;
+    } else if (type === 0x0180 && !resourceIdsChunk) {
+      resourceIdsChunk = rawChunk;
+    } else {
+      bodyChunks.push({ type, headerSize, chunkSize, raw: rawChunk });
+    }
+    ptr += chunkSize;
+  }
+
+  if (!stringPoolChunk) throw new Error('В AndroidManifest.xml отсутствует StringPool');
+
+  // Декодирование RES_STRING_POOL_TYPE (0x0001)
+  const spView = new DataView(stringPoolChunk.buffer);
+  const spHeaderSize = spView.getUint16(2, true);
+  const stringCount = spView.getUint32(8, true);
+  const styleCount = spView.getUint32(12, true);
+  const flags = spView.getUint32(16, true);
+  const stringsStart = spView.getUint32(20, true);
+  const stylesStart = spView.getUint32(24, true);
+  const isUtf8 = (flags & (1 << 8)) !== 0;
+
+  const strings = [];
+  for (let i = 0; i < stringCount; i++) {
+    const strOffset = stringsStart + spView.getUint32(spHeaderSize + i * 4, true);
+    if (isUtf8) {
+      let p = strOffset;
+      let charLen = stringPoolChunk[p++];
+      if (charLen & 0x80) charLen = ((charLen & 0x7F) << 8) | stringPoolChunk[p++];
+      let byteLen = stringPoolChunk[p++];
+      if (byteLen & 0x80) byteLen = ((byteLen & 0x7F) << 8) | stringPoolChunk[p++];
+      strings.push(textDecoder.decode(stringPoolChunk.subarray(p, p + byteLen)));
+    } else {
+      let p = strOffset;
+      let charLen = spView.getUint16(p, true);
+      p += 2;
+      if (charLen & 0x8000) {
+        charLen = ((charLen & 0x7FFF) << 16) | spView.getUint16(p, true);
+        p += 2;
+      }
+      const utf16Bytes = stringPoolChunk.subarray(p, p + charLen * 2);
+      strings.push(new TextDecoder('utf-16le').decode(utf16Bytes));
+    }
+  }
+
+  const tailOffset = styleCount > 0 ? stylesStart : stringPoolChunk.length;
+  const stylesTail = styleCount > 0 ? stringPoolChunk.slice(stylesStart) : new Uint8Array(0);
+
+  // Анализ XML-тегов для UI
+  let pkgName = '';
+  let versionCode = 1;
+  let versionName = '1.0.0';
+  const permissions = [];
+  const metaData = [];
+
+  for (let i = 0; i < bodyChunks.length; i++) {
+    const ch = bodyChunks[i];
+    if (ch.type !== 0x0102) continue; // START_TAG
+    const cv = new DataView(ch.raw.buffer);
+    const tagNameIdx = cv.getInt32(20, true);
+    const tagName = strings[tagNameIdx] || '';
+    const attrCount = cv.getUint16(28, true);
+
+    const attrs = [];
+    for (let a = 0; a < attrCount; a++) {
+      const aOff = 36 + a * 20;
+      const nameIdx = cv.getInt32(aOff + 4, true);
+      const rawValIdx = cv.getInt32(aOff + 8, true);
+      const valType = cv.getUint8(aOff + 15);
+      const valData = cv.getUint32(aOff + 16, true);
+      attrs.push({
+        name: strings[nameIdx] || '',
+        rawValIdx,
+        valType,
+        valData,
+        strVal: (valType === 0x03 && valData < strings.length) ? strings[valData] : null
+      });
+    }
+
+    if (tagName === 'manifest') {
+      for (const at of attrs) {
+        if (at.name === 'package' && at.strVal) pkgName = at.strVal;
+        if (at.name === 'versionCode' && (at.valType === 0x10 || at.valType === 0x11)) versionCode = at.valData;
+        if (at.name === 'versionName' && at.strVal) versionName = at.strVal;
+      }
+    } else if (tagName === 'uses-permission') {
+      const nameAttr = attrs.find(x => x.name === 'name');
+      if (nameAttr && nameAttr.strVal) permissions.push(nameAttr.strVal);
+    } else if (tagName === 'meta-data') {
+      const nameAttr = attrs.find(x => x.name === 'name');
+      const valAttr = attrs.find(x => x.name === 'value');
+      if (nameAttr && nameAttr.strVal) {
+        metaData.push({
+          key: nameAttr.strVal,
+          value: valAttr ? (valAttr.strVal !== null ? valAttr.strVal : String(valAttr.valData)) : '',
+          isString: valAttr ? valAttr.valType === 0x03 : true
+        });
+      }
+    }
+  }
+
+  return {
+    strings,
+    isUtf8,
+    styleCount,
+    stylesTail,
+    resourceIdsChunk,
+    bodyChunks,
+    pkgName,
+    versionCode,
+    versionName,
+    permissions,
+    metaData
+  };
+}
+// === СБОРЩИК STRING POOL (С ВЫРАВНИВАНИЕМ 4 БАЙТА) ===
+function buildAxmlStringPool(strings, isUtf8, styleCount, stylesTail) {
+  const headerSize = 28;
+  const offsetsTableSize = strings.length * 4;
+  const encodedStrings = [];
+  const offsets = [];
+  let currentDataOffset = 0;
+
+  for (const str of strings) {
+    offsets.push(currentDataOffset);
+    if (isUtf8) {
+      const utf8Bytes = textEncoder.encode(str);
+      const charLen = str.length;
+      const byteLen = utf8Bytes.length;
+      const lenHeader = [];
+      if (charLen >= 0x80) lenHeader.push(0x80 | ((charLen >> 8) & 0x7F), charLen & 0xFF);
+      else lenHeader.push(charLen);
+      if (byteLen >= 0x80) lenHeader.push(0x80 | ((byteLen >> 8) & 0x7F), byteLen & 0xFF);
+      else lenHeader.push(byteLen);
+
+      const entry = new Uint8Array(lenHeader.length + byteLen + 1);
+      entry.set(lenHeader, 0);
+      entry.set(utf8Bytes, lenHeader.length);
+      entry[entry.length - 1] = 0; // null-terminator
+      encodedStrings.push(entry);
+      currentDataOffset += entry.length;
+    } else {
+      const charLen = str.length;
+      const lenBytes = charLen >= 0x8000 ? 4 : 2;
+      const entry = new Uint8Array(lenBytes + charLen * 2 + 2);
+      const ev = new DataView(entry.buffer);
+      if (charLen >= 0x8000) {
+        ev.setUint16(0, 0x8000 | ((charLen >> 16) & 0x7FFF), true);
+        ev.setUint16(2, charLen & 0xFFFF, true);
+      } else {
+        ev.setUint16(0, charLen, true);
+      }
+      for (let i = 0; i < charLen; i++) {
+        ev.setUint16(lenBytes + i * 2, str.charCodeAt(i), true);
+      }
+      encodedStrings.push(entry);
+      currentDataOffset += entry.length;
+    }
+  }
+
+  const rawStringsData = concatUint8(encodedStrings);
+  const padLen = (4 - (rawStringsData.length % 4)) % 4;
+  const paddedStringsData = padLen > 0 ? concatUint8([rawStringsData, new Uint8Array(padLen)]) : rawStringsData;
+
+  const stringsStart = headerSize + offsetsTableSize;
+  const stylesStart = styleCount > 0 ? (stringsStart + paddedStringsData.length) : 0;
+  const totalChunkSize = stringsStart + paddedStringsData.length + stylesTail.length;
+
+  const out = new Uint8Array(totalChunkSize);
+  const view = new DataView(out.buffer);
+  view.setUint16(0, 0x0001, true); // RES_STRING_POOL_TYPE
+  view.setUint16(2, headerSize, true);
+  view.setUint32(4, totalChunkSize, true);
+  view.setUint32(8, strings.length, true);
+  view.setUint32(12, styleCount, true);
+  view.setUint32(16, isUtf8 ? (1 << 8) : 0, true);
+  view.setUint32(20, stringsStart, true);
+  view.setUint32(24, stylesStart, true);
+
+  for (let i = 0; i < offsets.length; i++) {
+    view.setUint32(headerSize + i * 4, offsets[i], true);
+  }
+  out.set(paddedStringsData, stringsStart);
+  if (stylesTail.length > 0) out.set(stylesTail, stylesStart);
+
+  return out;
+}
+
+// === РЕНДЕР UI РАЗРЕШЕНИЙ И МЕТАДАННЫХ ===
+function renderManifestEditor(info) {
+  const box = document.getElementById('manifest-editor');
+  const permList = document.getElementById('perm-list');
+  const metaSec = document.getElementById('meta-section');
+  const metaList = document.getElementById('meta-list');
+
+  box.style.display = 'block';
+  permList.innerHTML = '';
+
+  const uniquePerms = Array.from(new Set(info.permissions));
+  uniquePerms.forEach(p => {
+    const label = document.createElement('label');
+    label.className = 'perm-item';
+    label.innerHTML = `<input type="checkbox" class="perm-chk" value="${p}" checked> <span>${p}</span>`;
+    permList.appendChild(label);
+  });
+
+  if (info.metaData.length > 0) {
+    metaSec.style.display = 'block';
+    metaList.innerHTML = '';
+    info.metaData.forEach((m, idx) => {
+      const row = document.createElement('div');
+      row.className = 'meta-row';
+      row.innerHTML = `
+        <span class="meta-key" title="${m.key}">${m.key}</span>
+        <input type="text" class="meta-val-input" data-meta-idx="${idx}" value="${m.value.replace(/"/g, '&quot;')}">
+      `;
+      metaList.appendChild(row);
+    });
+  } else {
+    metaSec.style.display = 'none';
+  }
+}
+
+document.getElementById('btn-add-perm').addEventListener('click', () => {
+  const inp = document.getElementById('new-perm-input');
+  const val = inp.value.trim();
+  if (!val) return;
+  const permList = document.getElementById('perm-list');
+  const label = document.createElement('label');
+  label.className = 'perm-item';
+  label.innerHTML = `<input type="checkbox" class="perm-chk" value="${val}" checked> <span>${val}</span>`;
+  permList.appendChild(label);
+  inp.value = '';
+  log(`Добавлено разрешение: ${val}`, 'info');
+});
+// === ПАТЧЕР БИНАРНОГО ANDROIDMANIFEST.XML ===
+function patchAxmlManifest(info, opts) {
+  const strings = [...info.strings];
+  const oldPkg = info.pkgName;
+  const newPkg = opts.pkgName || oldPkg;
+  const newLabel = opts.appLabel;
+  const newVerCode = opts.versionCode;
+  const newVerName = opts.versionName;
+  const activePerms = new Set(opts.activePerms);
+  const editedMeta = opts.editedMeta; // Map<key, newValue>
+
+  // Вспомогательная функция добавления строки в StringPool (или возврата существующего индекса)
+  function addOrGetString(str) {
+    const existing = strings.indexOf(str);
+    if (existing !== -1) return existing;
+    strings.push(str);
+    return strings.length - 1;
+  }
+
+  // Находим/создаем индексы строк для новых разрешений
+  const androidNsIdx = strings.indexOf('http://android.com');
+  const usesPermTagIdx = addOrGetString('uses-permission');
+  const nameAttrIdx = addOrGetString('name');
+
+  // Клонируем чанки тела AXML
+  const chunks = info.bodyChunks.map(c => ({
+    type: c.type,
+    headerSize: c.headerSize,
+    chunkSize: c.chunkSize,
+    raw: new Uint8Array(c.raw)
+  }));
+
+  const existingPermsInTree = new Set();
+  const filteredChunks = [];
+  let skipNextEndTagForPerm = false;
+  let manifestTagIndex = -1;
+
+  for (let i = 0; i < chunks.length; i++) {
+    const ch = chunks[i];
+
+    if (skipNextEndTagForPerm && ch.type === 0x0103) { // END_TAG
+      skipNextEndTagForPerm = false;
+      continue;
+    }
+
+    if (ch.type === 0x0102) { // START_TAG
+      const cv = new DataView(ch.raw.buffer);
+      const tagNameIdx = cv.getInt32(20, true);
+      const tagName = strings[tagNameIdx] || '';
+      const attrCount = cv.getUint16(28, true);
+
+      if (tagName === 'manifest') {
+        manifestTagIndex = filteredChunks.length;
+      }
+
+      // Проверяем <uses-permission>
+      if (tagName === 'uses-permission') {
+        let permName = '';
+        for (let a = 0; a < attrCount; a++) {
+          const aOff = 36 + a * 20;
+          const aName = strings[cv.getInt32(aOff + 4, true)];
+          const valType = cv.getUint8(aOff + 15);
+          const valData = cv.getUint32(aOff + 16, true);
+          if (aName === 'name' && valType === 0x03) {
+            permName = strings[valData] || '';
+          }
+        }
+        if (permName && !activePerms.has(permName)) {
+          skipNextEndTagForPerm = true;
+          continue; // Удаляем START_TAG снятого разрешения
+        }
+        if (permName) existingPermsInTree.add(permName);
+      }
+
+      // Патчим атрибуты внутри тегов
+      let metaKey = null;
+      let metaValAttrOffset = -1;
+
+      for (let a = 0; a < attrCount; a++) {
+        const aOff = 36 + a * 20;
+        const aNameIdx = cv.getInt32(aOff + 4, true);
+        const aName = strings[aNameIdx] || '';
+        const valType = cv.getUint8(aOff + 15);
+        const valData = cv.getUint32(aOff + 16, true);
+
+        // 1. package в <manifest>
+        if (tagName === 'manifest' && aName === 'package' && newPkg) {
+          const idx = addOrGetString(newPkg);
+          cv.setInt32(aOff + 8, idx, true);
+          cv.setUint8(aOff + 15, 0x03);
+          cv.setUint32(aOff + 16, idx, true);
+        }
+
+        // 2. versionCode (Resource ID 0x0101021b, TYPE_INT_DEC 0x10)
+        if (tagName === 'manifest' && aName === 'versionCode' && newVerCode) {
+          cv.setInt32(aOff + 8, -1, true);
+          cv.setUint8(aOff + 15, 0x10);
+          cv.setUint32(aOff + 16, newVerCode >>> 0, true);
+        }
+
+        // 3. versionName (Resource ID 0x0101021c, TYPE_STRING 0x03)
+        if (tagName === 'manifest' && aName === 'versionName' && newVerName) {
+          const idx = addOrGetString(newVerName);
+          cv.setInt32(aOff + 8, idx, true);
+          cv.setUint8(aOff + 15, 0x03);
+          cv.setUint32(aOff + 16, idx, true);
+        }
+
+        // 4. android:label в <application> и <activity>
+        if ((tagName === 'application' || tagName === 'activity') && aName === 'label' && newLabel) {
+          const idx = addOrGetString(newLabel);
+          cv.setInt32(aOff + 8, idx, true);
+          cv.setUint8(aOff + 15, 0x03);
+          cv.setUint32(aOff + 16, idx, true);
+        }
+
+        // 5. android:authorities (обновляем префикс старого пакета)
+        if (aName === 'authorities' && valType === 0x03 && oldPkg && newPkg && oldPkg !== newPkg) {
+          const oldAuth = strings[valData] || '';
+          if (oldAuth.startsWith(oldPkg)) {
+            const newAuth = newPkg + oldAuth.slice(oldPkg.length);
+            const idx = addOrGetString(newAuth);
+            cv.setInt32(aOff + 8, idx, true);
+            cv.setUint32(aOff + 16, idx, true);
+          }
+        }
+
+        // 6. <meta-data> запоминаем ключ и смещение value
+        if (tagName === 'meta-data') {
+          if (aName === 'name' && valType === 0x03) metaKey = strings[valData];
+          if (aName === 'value') metaValAttrOffset = aOff;
+        }
+      }
+
+      if (tagName === 'meta-data' && metaKey && metaValAttrOffset !== -1 && editedMeta.has(metaKey)) {
+        const newValStr = editedMeta.get(metaKey);
+        const idx = addOrGetString(newValStr);
+        cv.setInt32(metaValAttrOffset + 8, idx, true);
+        cv.setUint8(metaValAttrOffset + 15, 0x03);
+        cv.setUint32(metaValAttrOffset + 16, idx, true);
+      }
+    }
+
+    filteredChunks.push(ch);
+  }
+
+  // Добавляем новые разрешения, которых не было в шаблоне
+  const newPermChunks = [];
+  for (const perm of activePerms) {
+    if (existingPermsInTree.has(perm)) continue;
+    const permValIdx = addOrGetString(perm);
+
+    // START_TAG <uses-permission android:name="perm" /> (36 байт заголовок + 20 байт 1 атрибут = 56 байт)
+    const startRaw = new Uint8Array(56);
+    const sv = new DataView(startRaw.buffer);
+    sv.setUint16(0, 0x0102, true); // RES_XML_START_ELEMENT_TYPE
+    sv.setUint16(2, 16, true);     // headerSize
+    sv.setUint32(4, 56, true);     // chunkSize
+    sv.setUint32(8, 1, true);      // lineNumber
+    sv.setInt32(12, -1, true);     // comment
+    sv.setInt32(16, -1, true);     // ns
+    sv.setInt32(20, usesPermTagIdx, true);
+    sv.setUint16(24, 20, true);    // attributeStart
+    sv.setUint16(26, 20, true);    // attributeSize
+    sv.setUint16(28, 1, true);     // attributeCount
+    // Атрибут android:name
+    sv.setInt32(36, androidNsIdx, true);
+    sv.setInt32(40, nameAttrIdx, true);
+    sv.setInt32(44, permValIdx, true);
+    sv.setUint16(48, 8, true);     // TypedValue size
+    sv.setUint8(51, 0x03);         // TYPE_STRING
+    sv.setUint32(52, permValIdx, true);
+
+    // END_TAG </uses-permission> (24 байта)
+    const endRaw = new Uint8Array(24);
+    const ev = new DataView(endRaw.buffer);
+    ev.setUint16(0, 0x0103, true); // RES_XML_END_ELEMENT_TYPE
+    ev.setUint16(2, 16, true);
+    ev.setUint32(4, 24, true);
+    ev.setUint32(8, 1, true);
+    ev.setInt32(12, -1, true);
+    ev.setInt32(16, -1, true);
+    ev.setInt32(20, usesPermTagIdx, true);
+
+    newPermChunks.push({ raw: startRaw }, { raw: endRaw });
+  }
+
+  if (newPermChunks.length > 0 && manifestTagIndex !== -1) {
+    filteredChunks.splice(manifestTagIndex + 1, 0, ...newPermChunks);
+  }
+
+  // Пересобираем StringPool (если добавились новые строки — обновляем ResourceIds)
+  let resIdsChunk = info.resourceIdsChunk;
+  if (resIdsChunk && nameAttrIdx >= (resIdsChunk.length - 8) / 4) {
+    const neededCount = nameAttrIdx + 1;
+    const newResChunk = new Uint8Array(8 + neededCount * 4);
+    newResChunk.set(resIdsChunk, 0);
+    const rv = new DataView(newResChunk.buffer);
+    rv.setUint32(4, newResChunk.length, true);
+    rv.setUint32(8 + nameAttrIdx * 4, 0x01010003, true); // android.R.attr.name
+    resIdsChunk = newResChunk;
+  }
+
+  const newSpChunk = buildAxmlStringPool(strings, info.isUtf8, info.styleCount, info.stylesTail);
+  const parts = [newSpChunk];
+  if (resIdsChunk) parts.push(resIdsChunk);
+  for (const c of filteredChunks) parts.push(c.raw);
+
+  const bodyBytes = concatUint8(parts);
+  const totalFileSize = 8 + bodyBytes.length;
+  const header = new Uint8Array(8);
+  const hv = new DataView(header.buffer);
+  hv.setUint32(0, 0x00080003, true);
+  hv.setUint32(4, totalFileSize, true);
+
+  return concatUint8([header, bodyBytes]);
+}
+// === ПАТЧЕР БИНАРНОГО RESOURCES.ARSC ===
+function patchResourcesArsc(arscBytes, newPkgName) {
+  if (!newPkgName) return arscBytes;
+  const out = new Uint8Array(arscBytes);
+  const view = new DataView(out.buffer);
+
+  // Проверяем заголовок RES_TABLE_TYPE (0x0002)
+  if (view.getUint16(0, true) !== 0x0002) {
+    log('Предупреждение: нестандартный заголовок resources.arsc, пропуск патча пакета.', 'warn');
+    return out;
+  }
+
+  const tableHeaderSize = view.getUint16(2, true);
+  let ptr = tableHeaderSize;
+
+  while (ptr + 8 <= out.length) {
+    const chunkType = view.getUint16(ptr, true);
+    const chunkSize = view.getUint32(ptr + 4, true);
+    if (chunkSize < 8) break;
+
+    if (chunkType === 0x0200) { // RES_TABLE_PACKAGE_TYPE
+      // По смещению +12 от начала чанка находится char16_t name[128] (256 байт)
+      const nameOffset = ptr + 12;
+      if (nameOffset + 256 <= out.length) {
+        out.fill(0, nameOffset, nameOffset + 256);
+        const maxChars = Math.min(newPkgName.length, 127);
+        for (let i = 0; i < maxChars; i++) {
+          view.setUint16(nameOffset + i * 2, newPkgName.charCodeAt(i), true);
+        }
+        log(`Патч resources.arsc: имя пакета обновлено на "${newPkgName}"`, 'ok');
+      }
+      break;
+    }
+    ptr += chunkSize;
+  }
+
+  return out;
+}
+// === ЗАГРУЗКА ШАБЛОНА APK ===
+async function processTemplateBytes(bytes, sourceName) {
+  try {
+    log(`Анализ шаблона ${sourceName} (${(bytes.length / 1024).toFixed(1)} КБ)...`);
+    const entries = await parseZip(bytes);
+    const manifestEntry = entries.find(e => e.name === 'AndroidManifest.xml');
+    if (!manifestEntry) throw new Error('В архиве не найден AndroidManifest.xml');
+
+    const info = parseAxmlManifest(manifestEntry.data);
+    AppState.templateBytes = bytes;
+    AppState.zipEntries = entries;
+    AppState.manifestInfo = info;
+
+    if (info.pkgName) document.getElementById('pkg-name').value = info.pkgName;
+    if (info.versionCode) document.getElementById('version-code').value = info.versionCode;
+    if (info.versionName) document.getElementById('version-name').value = info.versionName;
+
+    renderManifestEditor(info);
+
+    const statusEl = document.getElementById('tpl-status');
+    statusEl.textContent = `${sourceName} (${entries.length} файлов)`;
+    statusEl.className = 'status-pill ok';
+    log(`Шаблон загружен: pkg=${info.pkgName}, vCode=${info.versionCode}, vName=${info.versionName}, прав=${info.permissions.length}`, 'ok');
+  } catch (e) {
+    log(`Ошибка разбора шаблона: ${e.message}`, 'err');
+  }
+}
+
+async function loadTemplateFromUrl(rawUrl) {
+  try {
+    log('Скачивание шаблона по URL...');
+    const bytes = await fetchBytes(rawUrl);
+    const name = rawUrl.split('/').pop().split('?')[0] || 'template.apk';
+    await processTemplateBytes(bytes, name);
+  } catch (e) {
+    log(`Ошибка загрузки шаблона: ${e.message}`, 'err');
+  }
+}
+
+document.getElementById('tpl-file').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const buf = await file.arrayBuffer();
+  await processTemplateBytes(new Uint8Array(buf), file.name);
+});
+
+document.getElementById('btn-load-tpl').addEventListener('click', () => {
+  const url = document.getElementById('tpl-url').value.trim();
+  if (!url) return log('Укажите URL шаблона template.apk', 'warn');
+  loadTemplateFromUrl(url);
+});
+
+// === ЗАГРУЗКА ВЕБ-ФАЙЛОВ (ASSETS/WWW/) ===
+function updateWebFilesUI() {
+  const count = AppState.webFiles.size;
+  const statusEl = document.getElementById('web-status');
+  statusEl.textContent = `${count} файлов`;
+  statusEl.className = count > 0 ? 'status-pill ok' : 'status-pill';
+
+  const listEl = document.getElementById('web-files-list');
+  if (count === 0) {
+    listEl.textContent = 'Если загружен 1 .html файл, он сохранится как assets/www/index.html.';
+  } else {
+    const names = Array.from(AppState.webFiles.keys());
+    const effective = (count === 1 && names[0].toLowerCase().endsWith('.html'))
+      ? ['index.html (из ' + names[0] + ')']
+      : names;
+    listEl.textContent = 'В архив пойдут: ' + effective.join(', ');
+  }
+}
+
+document.getElementById('web-files').addEventListener('change', async (e) => {
+  for (const file of e.target.files) {
+    const buf = await file.arrayBuffer();
+    AppState.webFiles.set(file.name, new Uint8Array(buf));
+    log(`Добавлен локальный файл: ${file.name} (${buf.byteLength} Б)`, 'info');
+  }
+  updateWebFilesUI();
+});
+
+async function loadWebFilesFromUrls() {
+  const raw = document.getElementById('web-urls').value;
+  const urls = raw.split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
+  if (urls.length === 0) return log('Список ссылок на веб-файлы пуст.', 'warn');
+
+  for (const u of urls) {
+    try {
+      const bytes = await fetchBytes(u);
+      let name = u.split('/').pop().split('?')[0].split('#')[0] || 'index.html';
+      if (name.startsWith('data:')) name = 'index.html';
+      AppState.webFiles.set(name, bytes);
+      log(`Загружен по URL: ${name} (${bytes.length} Б)`, 'ok');
+    } catch (e) {
+      log(`Ошибка загрузки ${u}: ${e.message}`, 'err');
+    }
+  }
+  updateWebFilesUI();
+}
+
+document.getElementById('btn-load-web-urls').addEventListener('click', loadWebFilesFromUrls);
+document.getElementById('btn-clear-web').addEventListener('click', () => {
+  AppState.webFiles.clear();
+  document.getElementById('web-files').value = '';
+  updateWebFilesUI();
+  log('Список веб-файлов очищен.', 'info');
+});
+
+// === ГЕНЕРАТОР ИКОНОК 192x192 (PNG + WEBP) БЕЗ TAINTED CANVAS ===
+async function processIconBlob(blob) {
+  const objUrl = URL.createObjectURL(blob);
+  try {
+    const img = await new Promise((resolve, reject) => {
+      const i = new Image();
+      i.onload = () => resolve(i);
+      i.onerror = () => reject(new Error('Не удалось декодировать изображение'));
+      i.src = objUrl;
+    });
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 192;
+    canvas.height = 192;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, 192, 192);
+    ctx.drawImage(img, 0, 0, 192, 192);
+
+    const pngBlob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+    const webpBlob = await new Promise(res => canvas.toBlob(res, 'image/webp', 0.92));
+
+    AppState.iconPng = new Uint8Array(await pngBlob.arrayBuffer());
+    AppState.iconWebp = new Uint8Array(await webpBlob.arrayBuffer());
+
+    document.getElementById('icon-preview').src = canvas.toDataURL('image/png');
+    document.getElementById('icon-preview-box').style.display = 'flex';
+    const st = document.getElementById('icon-status');
+    st.textContent = '192×192 PNG + WebP';
+    st.className = 'status-pill ok';
+    log(`Иконка обработана: PNG=${AppState.iconPng.length} Б, WebP=${AppState.iconWebp.length} Б`, 'ok');
+  } finally {
+    URL.revokeObjectURL(objUrl);
+  }
+}
+
+async function loadIconFromUrl(rawUrl) {
+  try {
+    log('Скачивание иконки через fetch(Blob) для обхода CORS...');
+    const url = normalizeGitHubUrl(rawUrl);
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const blob = await res.blob();
+    await processIconBlob(blob);
+  } catch (e) {
+    log(`Ошибка загрузки иконки: ${e.message}`, 'err');
+  }
+}
+
+document.getElementById('icon-file').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  await processIconBlob(file);
+});
+
+document.getElementById('btn-load-icon').addEventListener('click', () => {
+  const url = document.getElementById('icon-url').value.trim();
+  if (!url) return log('Укажите URL иконки', 'warn');
+  loadIconFromUrl(url);
+});
+// === ASN.1 DER КОНСТРУКТОР ===
+const DER = {
+  len(n) {
+    if (n < 0x80) return new Uint8Array([n]);
+    const bytes = [];
+    let tmp = n;
+    while (tmp > 0) {
+      bytes.unshift(tmp & 0xFF);
+      tmp >>= 8;
+    }
+    return new Uint8Array([0x80 | bytes.length, ...bytes]);
+  },
+  tlv(tag, content) {
+    const body = content instanceof Uint8Array ? content : concatUint8(content);
+    return concatUint8([new Uint8Array([tag]), this.len(body.length), body]);
+  },
+  seq(items) { return this.tlv(0x30, items); },
+  set(items) { return this.tlv(0x31, items); },
+  ctx(idx, items) { return this.tlv(0xA0 | idx, items); },
+  int(bytes) {
+    let b = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+    while (b.length > 1 && b[0] === 0 && (b[1] & 0x80) === 0) b = b.subarray(1);
+    if (b[0] & 0x80) b = concatUint8([new Uint8Array([0]), b]);
+    return this.tlv(0x02, b);
+  },
+  bitString(bytes) {
+    return this.tlv(0x03, concatUint8([new Uint8Array([0]), bytes]));
+  },
+  octetString(bytes) {
+    return this.tlv(0x04, bytes);
+  },
+  nullVal() { return new Uint8Array([0x05, 0x00]); },
+  oid(dotStr) {
+    const parts = dotStr.split('.').map(Number);
+    const out = [parts[0] * 40 + parts[1]];
+    for (let i = 2; i < parts.length; i++) {
+      let v = parts[i];
+      const sub = [];
+      do {
+        sub.unshift(v & 0x7F);
+        v >>>= 7;
+      } while (v > 0);
+      for (let j = 0; j < sub.length - 1; j++) sub[j] |= 0x80;
+      out.push(...sub);
+    }
+    return this.tlv(0x06, new Uint8Array(out));
+  },
+  utf8(str) { return this.tlv(0x0C, textEncoder.encode(str)); },
+  printable(str) { return this.tlv(0x13, textEncoder.encode(str)); },
+  utcTime(date) {
+    const pad = n => String(n).padStart(2, '0');
+    const s = String(date.getUTCFullYear()).slice(-2) +
+              pad(date.getUTCMonth() + 1) + pad(date.getUTCDate()) +
+              pad(date.getUTCHours()) + pad(date.getUTCMinutes()) + pad(date.getUTCSeconds()) + 'Z';
+    return this.tlv(0x17, textEncoder.encode(s));
+  }
+};
+
+function bytesToPem(bytes, label) {
+  let bin = '';
+  for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+  const b64 = btoa(bin).match(/.{1,64}/g).join('\n');
+  return `-----BEGIN ${label}-----\n${b64}\n-----END ${label}-----\n`;
+}
+
+function pemToBytes(pem) {
+  const b64 = pem.replace(/-----[^-]+-----/g, '').replace(/\s+/g, '');
+  const bin = atob(b64);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
+// === ГЕНЕРАЦИЯ RSA-2048 И САМОПОДПИСАННОГО X.509 СЕРТИФИКАТА ===
+async function generateSelfSignedCert(commonName = 'Android App Builder') {
+  log('Генерация пары ключей RSA-2048 (Web Crypto API)...');
+  const keyPair = await crypto.subtle.generateKey(
+    {
+      name: 'RSASSA-PKCS1-v1_5',
+      modulusLength: 2048,
+      publicExponent: new Uint8Array([1, 0, 1]),
+      hash: 'SHA-256'
+    },
+    true,
+    ['sign', 'verify']
+  );
+
+  const pkcs8Der = new Uint8Array(await crypto.subtle.exportKey('pkcs8', keyPair.privateKey));
+  const spkiDer = new Uint8Array(await crypto.subtle.exportKey('spki', keyPair.publicKey));
+
+  // Случайный 8-байтный серийный номер со сброшенным старшим битом
+  const serial = new Uint8Array(8);
+  crypto.getRandomValues(serial);
+  serial[0] &= 0x7F;
+  if (serial[0] === 0) serial[0] = 0x01;
+
+  // Алгоритм подписи: sha256WithRSAEncryption (1.2.840.113549.1.1.11)
+  const algId = DER.seq([DER.oid('1.2.840.113549.1.1.11'), DER.nullVal()]);
+
+  // Имя субъекта / издателя (CN)
+  const nameRdn = DER.seq([
+    DER.set([DER.seq([DER.oid('2.5.4.3'), DER.utf8(commonName)])])
+  ]);
+
+  const now = new Date();
+  const validFrom = new Date(now.getTime() - 86400000);
+  const validTo = new Date(now.getTime() + 25 * 365.25 * 86400000); // 25 лет
+  const validity = DER.seq([DER.utcTime(validFrom), DER.utcTime(validTo)]);
+
+  // TBSCertificate (v3)
+  const tbs = DER.seq([
+    DER.ctx(0, DER.int([2])), // version = v3 (2)
+    DER.int(serial),
+    algId,
+    nameRdn,
+    validity,
+    nameRdn,
+    spkiDer
+  ]);
+
+  const sigBuf = await crypto.subtle.sign('RSASSA-PKCS1-v1_5', keyPair.privateKey, tbs);
+  const sigBytes = new Uint8Array(sigBuf);
+
+  const certDer = DER.seq([tbs, algId, DER.bitString(sigBytes)]);
+  const privPem = bytesToPem(pkcs8Der, 'PRIVATE KEY');
+  const certPem = bytesToPem(certDer, 'CERTIFICATE');
+
+  AppState.lastGenPrivPem = privPem;
+  AppState.lastGenCertPem = certPem;
+  document.getElementById('generated-key-actions').style.display = 'block';
+
+  return { privateKey: keyPair.privateKey, certDer, privPem, certPem };
+}
+
+// === ОБРАБОТЧИКИ ЗАГРУЗКИ / СКАЧИВАНИЯ PEM-КЛЮЧЕЙ ===
+async function loadCustomKeyUrl(kind, rawUrl) {
+  try {
+    const txt = await fetchText(rawUrl);
+    if (kind === 'priv') {
+      AppState.customPrivPem = txt;
+      log('Приватный ключ private.pem загружен по URL.', 'ok');
+    } else {
+      AppState.customCertPem = txt;
+      log('Сертификат cert.pem загружен по URL.', 'ok');
+    }
+  } catch (e) {
+    log(`Ошибка загрузки PEM по URL: ${e.message}`, 'err');
+  }
+}
+
+document.getElementById('priv-key-file').addEventListener('change', async (e) => {
+  const f = e.target.files[0];
+  if (f) {
+    AppState.customPrivPem = await f.text();
+    log(`Загружен локальный ключ: ${f.name}`, 'ok');
+  }
+});
+
+document.getElementById('cert-file').addEventListener('change', async (e) => {
+  const f = e.target.files[0];
+  if (f) {
+    AppState.customCertPem = await f.text();
+    log(`Загружен локальный сертификат: ${f.name}`, 'ok');
+  }
+});
+
+document.getElementById('btn-load-priv').addEventListener('click', () => {
+  const u = document.getElementById('priv-key-url').value.trim();
+  if (u) loadCustomKeyUrl('priv', u);
+});
+
+document.getElementById('btn-load-cert').addEventListener('click', () => {
+  const u = document.getElementById('cert-url').value.trim();
+  if (u) loadCustomKeyUrl('cert', u);
+});
+
+document.getElementById('btn-dl-priv').addEventListener('click', () => {
+  if (AppState.lastGenPrivPem) downloadBlob(textEncoder.encode(AppState.lastGenPrivPem), 'private.pem', 'application/x-pem-file');
+});
+
+document.getElementById('btn-dl-cert').addEventListener('click', () => {
+  if (AppState.lastGenCertPem) downloadBlob(textEncoder.encode(AppState.lastGenCertPem), 'cert.pem', 'application/x-pem-file');
+});
+// === УТИЛИТЫ ДЛЯ ПОДПИСИ V1 (JAR) И РАЗБОРА X.509 ===
+async function sha256(bytes) {
+  return new Uint8Array(await crypto.subtle.digest('SHA-256', bytes));
+}
+
+function uint8ToBase64(bytes) {
+  let bin = '';
+  for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+  return btoa(bin);
+}
+
+// Чтение DER TLV узла по смещению
+function readDerNode(buf, offset) {
+  const tag = buf[offset];
+  let lenByte = buf[offset + 1];
+  let headerLen = 2;
+  let bodyLen = 0;
+  if ((lenByte & 0x80) === 0) {
+    bodyLen = lenByte;
+  } else {
+    const numOctets = lenByte & 0x7F;
+    headerLen = 2 + numOctets;
+    for (let i = 0; i < numOctets; i++) {
+      bodyLen = (bodyLen << 8) | buf[offset + 2 + i];
+    }
+  }
+  const totalLen = headerLen + bodyLen;
+  return {
+    tag,
+    headerLen,
+    bodyLen,
+    totalLen,
+    raw: buf.subarray(offset, offset + totalLen),
+    body: buf.subarray(offset + headerLen, offset + totalLen)
+  };
+}
+
+// Извлечение Issuer, SerialNumber и SubjectPublicKeyInfo из X.509 DER
+function parseX509Fields(certDer) {
+  const root = readDerNode(certDer, 0);          // Certificate SEQUENCE
+  const tbs = readDerNode(root.body, 0);         // TBSCertificate SEQUENCE
+  let ptr = 0;
+
+  let first = readDerNode(tbs.body, ptr);
+  // Если есть тег [0] (version), пропускаем его
+  if (first.tag === 0xA0) {
+    ptr += first.totalLen;
+  }
+
+  const serialNode = readDerNode(tbs.body, ptr); // serialNumber INTEGER
+  ptr += serialNode.totalLen;
+
+  const sigAlgNode = readDerNode(tbs.body, ptr); // signature AlgorithmIdentifier
+  ptr += sigAlgNode.totalLen;
+
+  const issuerNode = readDerNode(tbs.body, ptr); // issuer Name
+  ptr += issuerNode.totalLen;
+
+  const validityNode = readDerNode(tbs.body, ptr); // validity
+  ptr += validityNode.totalLen;
+
+  const subjectNode = readDerNode(tbs.body, ptr); // subject Name
+  ptr += subjectNode.totalLen;
+
+  const spkiNode = readDerNode(tbs.body, ptr);   // subjectPublicKeyInfo
+
+  return {
+    serialRaw: serialNode.raw,
+    issuerRaw: issuerNode.raw,
+    spkiRaw: spkiNode.raw
+  };
+}
+
+// Сборка PKCS#7 SignedData (detached signature для CERT.SF)
+async function buildPkcs7CertRsa(certSfBytes, privateKey, certDer) {
+  const { serialRaw, issuerRaw } = parseX509Fields(certDer);
+
+  const sha256Alg = DER.seq([DER.oid('2.16.840.1.101.3.4.2.1'), DER.nullVal()]);
+  const rsaEncAlg = DER.seq([DER.oid('1.2.840.113549.1.1.1'), DER.nullVal()]);
+
+  // Подписываем байты CERT.SF ключом RSA-SHA256
+  const sigBuf = await crypto.subtle.sign('RSASSA-PKCS1-v1_5', privateKey, certSfBytes);
+  const sigBytes = new Uint8Array(sigBuf);
+
+  // SignerInfo
+  const issuerAndSerial = DER.seq([issuerRaw, serialRaw]);
+  const signerInfo = DER.seq([
+    DER.int([1]),              // version = 1
+    issuerAndSerial,
+    sha256Alg,                 // digestAlgorithm
+    rsaEncAlg,                 // signatureAlgorithm
+    DER.octetString(sigBytes)  // encryptedDigest
+  ]);
+
+  // ContentInfo (pkcs7-data: 1.2.840.113549.1.7.1, detached — без контента)
+  const encapContentInfo = DER.seq([DER.oid('1.2.840.113549.1.7.1')]);
+
+  // SignedData
+  const signedData = DER.seq([
+    DER.int([1]),              // version = 1
+    DER.set([sha256Alg]),      // digestAlgorithms
+    encapContentInfo,
+    DER.ctx(0, certDer),       // [0] IMPLICIT certificates
+    DER.set([signerInfo])      // signerInfos
+  ]);
+
+  // Внешний ContentInfo (pkcs7-signedData: 1.2.840.113549.1.7.2)
+  return DER.seq([
+    DER.oid('1.2.840.113549.1.7.2'),
+    DER.ctx(0, signedData)
+  ]);
+}
+
+// Генерация записей META-INF для v1 подписи
+async function generateV1SignatureEntries(entries, privateKey, certDer, isV2Also) {
+  const mfLines = [
+    'Manifest-Version: 1.0',
+    'Created-By: HTML-to-APK-Builder',
+    ''
+  ];
+
+  const sfEntryBlocks = [];
+
+  for (const entry of entries) {
+    const digest = uint8ToBase64(await sha256(entry.data));
+    const blockText = `Name: ${entry.name}\r\nSHA-256-Digest: ${digest}\r\n\r\n`;
+    mfLines.push(`Name: ${entry.name}`, `SHA-256-Digest: ${digest}`, '');
+
+    const blockDigest = uint8ToBase64(await sha256(textEncoder.encode(blockText)));
+    sfEntryBlocks.push(`Name: ${entry.name}\r\nSHA-256-Digest: ${blockDigest}\r\n`);
+  }
+
+  const manifestStr = mfLines.join('\r\n');
+  const manifestBytes = textEncoder.encode(manifestStr);
+  const manifestFullDigest = uint8ToBase64(await sha256(manifestBytes));
+
+  const sfHeaderLines = [
+    'Signature-Version: 1.0',
+    'Created-By: HTML-to-APK-Builder',
+    `SHA-256-Digest-Manifest: ${manifestFullDigest}`
+  ];
+  if (isV2Also) {
+    // Защита от downgrade-атак на Android 7.0+ при гибридной подписи v1+v2
+    sfHeaderLines.push('X-Android-APK-Signed: 2');
+  }
+
+  const certSfStr = sfHeaderLines.join('\r\n') + '\r\n\r\n' + sfEntryBlocks.join('\r\n');
+  const certSfBytes = textEncoder.encode(certSfStr);
+  const certRsaBytes = await buildPkcs7CertRsa(certSfBytes, privateKey, certDer);
+
+  return [
+    { name: 'META-INF/MANIFEST.MF', data: manifestBytes },
+    { name: 'META-INF/CERT.SF', data: certSfBytes },
+    { name: 'META-INF/CERT.RSA', data: certRsaBytes }
+  ];
+}
+// === ЧАНКОВЫЙ SHA-256 (1 МБ) ДЛЯ APK SIGNATURE SCHEME V2 ===
+const CHUNK_SIZE_1MB = 1024 * 1024;
+
+function writeUint32LE(val) {
+  const b = new Uint8Array(4);
+  new DataView(b.buffer).setUint32(0, val >>> 0, true);
+  return b;
+}
+
+function writeUint64LE(val) {
+  const b = new Uint8Array(8);
+  const dv = new DataView(b.buffer);
+  dv.setUint32(0, val >>> 0, true);
+  dv.setUint32(4, Math.floor(val / 0x100000000) >>> 0, true);
+  return b;
+}
+
+function lengthPrefixed32(bytes) {
+  return concatUint8([writeUint32LE(bytes.length), bytes]);
+}
+
+async function computeSectionChunkDigests(sectionBytes) {
+  const chunkDigests = [];
+  const totalLen = sectionBytes.length;
+
+  if (totalLen === 0) {
+    const emptyLeaf = concatUint8([new Uint8Array([0xA5]), writeUint32LE(0)]);
+    chunkDigests.push(await sha256(emptyLeaf));
+    return chunkDigests;
+  }
+
+  for (let offset = 0; offset < totalLen; offset += CHUNK_SIZE_1MB) {
+    const end = Math.min(offset + CHUNK_SIZE_1MB, totalLen);
+    const slice = sectionBytes.subarray(offset, end);
+    const leafHeader = new Uint8Array(5);
+    leafHeader[0] = 0xA5;
+    new DataView(leafHeader.buffer).setUint32(1, slice.length, true);
+
+    const leafData = concatUint8([leafHeader, slice]);
+    chunkDigests.push(await sha256(leafData));
+  }
+
+  return chunkDigests;
+}
+
+async function computeApkV2RootDigest(sec1Contents, sec3CentralDir, sec4EocdWithUpdatedOffset) {
+  const d1 = await computeSectionChunkDigests(sec1Contents);
+  const d3 = await computeSectionChunkDigests(sec3CentralDir);
+  const d4 = await computeSectionChunkDigests(sec4EocdWithUpdatedOffset);
+
+  const allLeafDigests = [...d1, ...d3, ...d4];
+  const topHeader = new Uint8Array(5);
+  topHeader[0] = 0x5A;
+  new DataView(topHeader.buffer).setUint32(1, allLeafDigests.length, true);
+
+  return await sha256(concatUint8([topHeader, ...allLeafDigests]));
+}
+// === СБОРКА APK SIG BLOCK 42 (V2 SIGNATURE) ===
+async function applyApkV2Signature(alignedZipBytes, privateKey, certDer) {
+  const view = new DataView(alignedZipBytes.buffer, alignedZipBytes.byteOffset, alignedZipBytes.byteLength);
+
+  // Находим EOCD (в наших выровненных архивах без комментария он занимает ровно последние 22 байта)
+  let eocdOffset = -1;
+  for (let i = alignedZipBytes.length - 22; i >= Math.max(0, alignedZipBytes.length - 65557); i--) {
+    if (view.getUint32(i, true) === 0x06054b50) {
+      eocdOffset = i;
+      break;
+    }
+  }
+  if (eocdOffset === -1) throw new Error('EOCD не найден при v2-подписи');
+
+  const cdOffset = view.getUint32(eocdOffset + 16, true);
+  const sec1Contents = alignedZipBytes.subarray(0, cdOffset);
+  const sec3CentralDir = alignedZipBytes.subarray(cdOffset, eocdOffset);
+  const sec4OrigEocd = alignedZipBytes.subarray(eocdOffset);
+
+  // Извлекаем SPKI из сертификата (поддержка X.509 v1 и v3 с)
+  const { spkiRaw } = parseX509Fields(certDer);
+
+  // Алгоритм 0x0103 = RSASSA-PKCS1-v1_5 with SHA-256
+  const SIG_ALG_RSA_SHA256 = 0x0103;
+
+  // Сначала вычисляем точный размер APK Signing Block, чтобы узнать новое смещение CD
+  // Структура SignedData (без префикса длины):
+  //   digests (4 + (4 + 4 + 4 + 32)) = 48 байт
+  //   certificates (4 + (4 + certDer.length))
+  //   additionalAttributes (4 байта = 0)
+  const signedDataLen = 48 + (8 + certDer.length) + 4;
+  // Структура Signer (без префикса длины):
+  //   signedData (4 + signedDataLen)
+  //   signatures (4 + (4 + 4 + 4 + 256)) = 272 байта (RSA-2048 подпись = 256 байт)
+  //   publicKey (4 + spkiRaw.length)
+  const signerLen = (4 + signedDataLen) + 272 + (4 + spkiRaw.length);
+  const v2PairValueLen = 4 + (4 + signerLen); // sequence of signers
+  const v2PairTotalLen = 8 + 4 + v2PairValueLen; // uint64 pairLen + uint32 ID (0x7109871a) + value
+
+  // Считаем размер блока без padding-пары:
+  // 8 (size of block at start) + v2PairTotalLen + 8 (size of block at end) + 16 ("APK Sig Block 42")
+  const baseBlockSize = 8 + v2PairTotalLen + 8 + 16;
+  const rem = baseBlockSize % 4096;
+  let padPairBytes = new Uint8Array(0);
+
+  if (rem !== 0) {
+    let padTotal = 4096 - rem;
+    // Минимальный размер пары ID+Value = 8 (uint64 len) + 4 (uint32 ID) = 12 байт
+    if (padTotal < 12) padTotal += 4096;
+    const padValLen = padTotal - 8; // uint64 len включает 4 байта ID + нули
+    const padZeroBytes = new Uint8Array(padValLen - 4);
+    padPairBytes = concatUint8([
+      writeUint64LE(padValLen),
+      writeUint32LE(0x42726577), // Verity Padding Block ID
+      padZeroBytes
+    ]);
+  }
+
+  const totalSigBlockSize = baseBlockSize + padPairBytes.length;
+  // Поле size_of_block в начале и конце не включает первые 8 байт (начальное поле размера)
+  const blockSizeFieldVal = totalSigBlockSize - 8;
+
+  // Обновляем смещение Central Directory в копии EOCD ДО вычисления SHA-256 дайджестов!
+  const sec4UpdatedEocd = new Uint8Array(sec4OrigEocd);
+  const newCdOffset = cdOffset + totalSigBlockSize;
+  new DataView(sec4UpdatedEocd.buffer).setUint32(16, newCdOffset, true);
+
+  // Вычисляем корневой SHA-256 дайджест по трем секциям
+  const rootDigest = await computeApkV2RootDigest(sec1Contents, sec3CentralDir, sec4UpdatedEocd);
+
+  // Собираем SignedData
+  const digestEntry = concatUint8([
+    writeUint32LE(SIG_ALG_RSA_SHA256),
+    lengthPrefixed32(rootDigest)
+  ]);
+  const digestsSeq = lengthPrefixed32(lengthPrefixed32(digestEntry));
+  const certsSeq = lengthPrefixed32(lengthPrefixed32(certDer));
+  const addAttrsSeq = writeUint32LE(0);
+
+  const signedDataBytes = concatUint8([digestsSeq, certsSeq, addAttrsSeq]);
+
+  // Подписываем байты SignedData приватным ключом RSA-SHA256
+  const sigBuf = await crypto.subtle.sign('RSASSA-PKCS1-v1_5', privateKey, signedDataBytes);
+  const sigBytes = new Uint8Array(sigBuf);
+
+  const sigEntry = concatUint8([
+    writeUint32LE(SIG_ALG_RSA_SHA256),
+    lengthPrefixed32(sigBytes)
+  ]);
+  const signaturesSeq = lengthPrefixed32(lengthPrefixed32(sigEntry));
+  const publicKeyPrefixed = lengthPrefixed32(spkiRaw);
+
+  const signerBytes = concatUint8([
+    lengthPrefixed32(signedDataBytes),
+    signaturesSeq,
+    publicKeyPrefixed
+  ]);
+  const signersSeq = lengthPrefixed32(lengthPrefixed32(signerBytes));
+
+  const v2Pair = concatUint8([
+    writeUint64LE(4 + signersSeq.length),
+    writeUint32LE(0x7109871a), // APK Signature Scheme v2 Block ID
+    signersSeq
+  ]);
+
+  const magic = textEncoder.encode('APK Sig Block 42');
+  const apkSigningBlock = concatUint8([
+    writeUint64LE(blockSizeFieldVal),
+    v2Pair,
+    padPairBytes,
+    writeUint64LE(blockSizeFieldVal),
+    magic
+  ]);
+
+  if (apkSigningBlock.length !== totalSigBlockSize) {
+    throw new Error(`Ошибка расчета размера APK Sig Block: ${apkSigningBlock.length} !== ${totalSigBlockSize}`);
+  }
+
+  return concatUint8([sec1Contents, apkSigningBlock, sec3CentralDir, sec4UpdatedEocd]);
+}
+// === ПОЛУЧЕНИЕ КЛЮЧА И СЕРТИФИКАТА ===
+async function resolveSigningMaterial(appLabel) {
+  const mode = document.getElementById('key-mode').value;
+  if (mode === 'generate') {
+    return await generateSelfSignedCert(appLabel || 'Android App');
+  }
+
+  if (!AppState.customPrivPem || !AppState.customCertPem) {
+    throw new Error('Загрузите оба файла: private.pem (PKCS#8) и cert.pem (X.509)');
+  }
+
+  log('Импорт пользовательского ключа PKCS#8 и сертификата X.509...');
+  const privDer = pemToBytes(AppState.customPrivPem);
+  const certDer = pemToBytes(AppState.customCertPem);
+
+  const privateKey = await crypto.subtle.importKey(
+    'pkcs8',
+    privDer,
+    { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+
+  return { privateKey, certDer };
+}
+
+// === ГЛАВНЫЙ ОРКЕСТРАТОР СБОРКИ APK ===
+document.getElementById('btn-build').addEventListener('click', async () => {
+  const btn = document.getElementById('btn-build');
+  if (!AppState.templateBytes || !AppState.manifestInfo) {
+    log('Сначала загрузите базовый шаблон template.apk!', 'err');
+    return;
+  }
+
+  btn.disabled = true;
+  try {
+    log('=== НАЧАЛО СБОРКИ APK ===', 'info');
+
+    const appLabel = document.getElementById('app-label').value.trim();
+    const pkgName = document.getElementById('pkg-name').value.trim();
+    const versionCode = parseInt(document.getElementById('version-code').value, 10) || 1;
+    const versionName = document.getElementById('version-name').value.trim() || '1.0.0';
+    const rawOutName = document.getElementById('apk-filename').value.trim() || 'app-release-signed';
+    const outFilename = rawOutName.toLowerCase().endsWith('.apk') ? rawOutName : `${rawOutName}.apk`;
+    const sigScheme = document.getElementById('sig-scheme').value;
+
+    // Собираем активные разрешения и отредактированные meta-data
+    const activePerms = Array.from(document.querySelectorAll('.perm-chk:checked')).map(el => el.value);
+    const editedMeta = new Map();
+    document.querySelectorAll('.meta-val-input').forEach(inp => {
+      const idx = parseInt(inp.getAttribute('data-meta-idx'), 10);
+      const item = AppState.manifestInfo.metaData[idx];
+      if (item && inp.value !== item.value) {
+        editedMeta.set(item.key, inp.value);
+      }
+    });
+
+    // 1. Патчим AndroidManifest.xml
+    log('Патч бинарного AndroidManifest.xml (AXML)...');
+    const patchedManifestBytes = patchAxmlManifest(AppState.manifestInfo, {
+      appLabel,
+      pkgName,
+      versionCode,
+      versionName,
+      activePerms,
+      editedMeta
+    });
+    log(`AndroidManifest.xml пересобран (${patchedManifestBytes.length} Б).`, 'ok');
+
+    // 2. Формируем список файлов архива
+    const outEntries = [];
+    let replacedIconsCount = 0;
+
+    for (const entry of AppState.zipEntries) {
+      // Пропускаем старые файлы в assets/www/, если пользователь загрузил свои
+      if (AppState.webFiles.size > 0 && entry.name.startsWith('assets/www/')) {
+        continue;
+      }
+
+      if (entry.name === 'AndroidManifest.xml') {
+        outEntries.push({ ...entry, data: patchedManifestBytes });
+        continue;
+      }
+
+      if (entry.name === 'resources.arsc') {
+        const patchedArsc = patchResourcesArsc(entry.data, pkgName);
+        outEntries.push({ ...entry, data: patchedArsc });
+        continue;
+      }
+
+      // Замена растровых иконок лаунчера в res/
+      if (AppState.iconPng && AppState.iconWebp && entry.name.startsWith('res/')) {
+        const lower = entry.name.toLowerCase();
+        const baseName = lower.split('/').pop();
+        const isRaster = baseName.endsWith('.png') || baseName.endsWith('.webp');
+        const isNinePatch = baseName.endsWith('.9.png');
+        const isSystem = baseName.startsWith('abc_') || baseName.startsWith('notification_') || baseName.startsWith('design_');
+        const isLauncher = lower.includes('mipmap') || baseName.includes('ic_launcher') || baseName.includes('app_icon') || baseName.startsWith('icon.');
+
+        if (isRaster && !isNinePatch && !isSystem && isLauncher) {
+          const newIconBytes = baseName.endsWith('.webp') ? AppState.iconWebp : AppState.iconPng;
+          outEntries.push({ ...entry, data: newIconBytes });
+          replacedIconsCount++;
+          continue;
+        }
+      }
+
+      outEntries.push(entry);
+    }
+
+    if (replacedIconsCount > 0) {
+      log(`Заменено иконок лаунчера в res/: ${replacedIconsCount} шт.`, 'ok');
+    }
+
+    // 3. Добавляем веб-файлы в assets/www/
+    if (AppState.webFiles.size > 0) {
+      const keys = Array.from(AppState.webFiles.keys());
+      if (keys.length === 1 && keys[0].toLowerCase().endsWith('.html')) {
+        const data = AppState.webFiles.get(keys[0]);
+        outEntries.push({ name: 'assets/www/index.html', data });
+        log(`Добавлен единственный HTML как assets/www/index.html (${data.length} Б).`, 'ok');
+      } else {
+        for (const [fname, data] of AppState.webFiles.entries()) {
+          outEntries.push({ name: `assets/www/${fname}`, data });
+        }
+        log(`Добавлено веб-файлов в assets/www/: ${keys.length} шт.`, 'ok');
+      }
+    }
+
+    // 4. Получаем ключи подписи
+    const { privateKey, certDer } = await resolveSigningMaterial(appLabel);
+
+    // 5. Подпись v1 (JAR), если выбрано v1 или v1v2
+    const useV1 = (sigScheme === 'v1' || sigScheme === 'v1v2');
+    const useV2 = (sigScheme === 'v2' || sigScheme === 'v1v2');
+
+    if (useV1) {
+      log('Генерация подписи v1 JAR (MANIFEST.MF, CERT.SF, PKCS#7 CERT.RSA)...');
+      const v1Entries = await generateV1SignatureEntries(outEntries, privateKey, certDer, useV2);
+      outEntries.push(...v1Entries);
+      log('Файлы подписи v1 добавлены в META-INF/.', 'ok');
+    }
+
+    // 6. Сборка ZIP с выравниванием zipalign (4 байта)
+    log('Упаковка ZIP с выравниванием zipalign (4 байта, TLV 0xFFFF)...');
+    let finalApkBytes = buildAlignedZip(outEntries);
+    log(`Выровненный ZIP собран: ${(finalApkBytes.length / 1024).toFixed(1)} КБ.`, 'ok');
+
+    // 7. Подпись v2 (APK Signature Scheme v2), если выбрано v2 или v1v2
+    if (useV2) {
+      log('Применение подписи v2 (APK Sig Block 42, выравнивание 4096 Б, SHA-256 чанки)...');
+      finalApkBytes = await applyApkV2Signature(finalApkBytes, privateKey, certDer);
+      log(`Подпись v2 успешно внедрена! Итоговый размер: ${(finalApkBytes.length / 1024).toFixed(1)} КБ.`, 'ok');
+    }
+
+    // 8. Скачивание готового APK
+    downloadBlob(finalApkBytes, outFilename, 'application/vnd.android.package-archive');
+    log(`=== СБОРКА ЗАВЕРШЕНА: ${outFilename} ===`, 'ok');
+  } catch (err) {
+    log(`КРИТИЧЕСКАЯ ОШИБКА СБОРКИ: ${err.message}`, 'err');
+    console.error(err);
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+log('Инициализация завершена. Готов к сборке APK.', 'ok');
+</script>
+</body>
+</html>

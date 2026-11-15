@@ -3,40 +3,50 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HTML to APK Builder & Signer v7</title>
+  <title>HTML to APK Builder & Signer v12</title>
   <style>
     * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     body { background: #0f172a; color: #f8fafc; margin: 0; padding: 16px; }
-    .card { max-width: 600px; margin: 0 auto; background: #1e293b; border-radius: 16px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
+    .card { max-width: 640px; margin: 0 auto; background: #1e293b; border-radius: 16px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
     h2 { margin: 0 0 6px; font-size: 20px; color: #38bdf8; }
     p.sub { margin: 0 0 20px; font-size: 13px; color: #94a3b8; }
     .field { margin-bottom: 16px; }
     .field label.title { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #cbd5e1; }
-    .file-box { position: relative; border: 2px dashed #475569; border-radius: 12px; padding: 16px; text-align: center; background: #0f172a; transition: 0.2s; }
+    .file-box { position: relative; border: 2px dashed #475569; border-radius: 12px; padding: 14px; text-align: center; background: #0f172a; transition: 0.2s; }
     .file-box.ready { border-color: #22c55e; background: rgba(34, 197, 94, 0.08); }
     .file-box input[type="file"] { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 10; }
     .file-box span { font-size: 14px; color: #e2e8f0; pointer-events: none; display: block; }
     .file-box small { font-size: 12px; color: #64748b; pointer-events: none; display: block; margin-top: 4px; }
-    input[type="text"] { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #475569; background: #0f172a; color: #fff; font-size: 15px; outline: none; }
-    input[type="text"]:focus { border-color: #38bdf8; }
+    .url-row { display: flex; gap: 8px; margin-top: 8px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+    input[type="text"], input[type="url"], select { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #475569; background: #0f172a; color: #fff; font-size: 14px; outline: none; }
+    input[type="text"]:focus, input[type="url"]:focus, select:focus { border-color: #38bdf8; }
+    .btn-small { padding: 0 14px; border: none; border-radius: 10px; background: #334155; color: #f8fafc; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: 0.2s; }
+    .btn-small:hover { background: #475569; }
+    .btn-outline { width: 100%; padding: 10px; border: 1px solid #38bdf8; border-radius: 10px; background: rgba(56, 189, 248, 0.1); color: #38bdf8; font-size: 13px; font-weight: 600; cursor: pointer; margin-top: 8px; display: none; }
     .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; background: #0284c7; color: #fff; font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.2s; margin-top: 8px; }
     .btn:active { transform: scale(0.98); background: #0369a1; }
-    .log { margin-top: 16px; background: #090d16; border-radius: 10px; padding: 12px; font-family: monospace; font-size: 12px; color: #4ade80; max-height: 180px; overflow-y: auto; white-space: pre-wrap; border: 1px solid #334155; }
+    .key-panel { background: #0f172a; border: 1px solid #334155; border-radius: 12px; padding: 12px; margin-top: 8px; display: none; }
+    .log { margin-top: 16px; background: #090d16; border-radius: 10px; padding: 12px; font-family: monospace; font-size: 12px; color: #4ade80; max-height: 200px; overflow-y: auto; white-space: pre-wrap; border: 1px solid #334155; }
     .preview-icon { width: 48px; height: 48px; border-radius: 10px; object-fit: cover; margin: 8px auto 0; display: none; border: 1px solid #475569; }
   </style>
 </head>
 <body>
 
 <div class="card">
-  <h2>📦 HTML → APK Конструктор v7</h2>
-  <p class="sub">Исправлен синтаксический анализ пакета, раздельные названия и безопасная инъекция иконки</p>
+  <h2>📦 HTML → APK Конструктор v12</h2>
+  <p class="sub">Гибкая подпись (v1 / v2 / v1+v2), свои ключи (файл или URL), zipalign 4 байта и замена иконок</p>
 
   <div class="field">
-    <label class="title">1. Базовый шаблон (template.apk)</label>
+    <label class="title">1. Базовый шаблон (файл или любая ссылка GitHub)</label>
     <div class="file-box" id="box-tpl">
       <input type="file" id="in-tpl" accept=".apk,application/vnd.android.package-archive,*/*">
-      <span id="lbl-tpl">Нажмите, чтобы выбрать template.apk</span>
-      <small>Файл заготовки, собранный один раз</small>
+      <span id="lbl-tpl">Нажмите, чтобы выбрать локальный template.apk</span>
+      <small>Или вставьте ссылку на .apk файл ниже</small>
+    </div>
+    <div class="url-row">
+      <input type="url" id="in-tpl-url" placeholder="https://github.com">
+      <button type="button" class="btn-small" onclick="loadTemplateFromUrl()">Загрузить URL</button>
     </div>
   </div>
 
@@ -54,7 +64,7 @@
     <div class="file-box" id="box-icon">
       <input type="file" id="in-icon" accept="image/*">
       <span id="lbl-icon">Нажмите, чтобы выбрать картинку</span>
-      <small>Любой PNG / JPG / WebP (автоматически сожмётся в 192×192 PNG)</small>
+      <small>Автоматически подменит все PNG и WebP иконки лаунчера в res/</small>
       <img id="icon-preview" class="preview-icon">
     </div>
   </div>
@@ -69,14 +79,62 @@
     <input type="text" id="apk-filename" value="MyBrowser" placeholder="Например: MyBrowser">
   </div>
 
-  <button class="btn" onclick="buildApk()">⚡ Собрать и подписать APK</button>
-  <div class="log" id="log">Готов к работе. Выберите template.apk и ваш HTML-файл.</div>
-</div>
+  <div class="field">
+    <label class="title">6. Схема подписи APK</label>
+    <select id="sig-scheme">
+      <option value="v1v2" selected>v1 + v2 (Обе схемы — максимальная совместимость)</option>
+      <option value="v1">Только v1 JAR (Для Android 5–10 и старых устройств)</option>
+      <option value="v2">Только v2 APK Signature Scheme (Для Android 7–16+)</option>
+    </select>
+  </div>
 
+  <div class="field">
+    <label class="title">7. Ключ подписи (сертификат)</label>
+    <select id="key-mode" onchange="toggleKeyMode()">
+      <option value="auto" selected>Сгенерировать новый случайный ключ (RSA-2048)</option>
+      <option value="custom">Загрузить свой ключ (.pem из файла или по URL)</option>
+    </select>
+
+    <div class="key-panel" id="custom-key-panel">
+      <div class="grid-2">
+        <div class="file-box" id="box-priv">
+          <input type="file" id="in-priv" accept=".pem,.key,.txt">
+          <span id="lbl-priv">Приватный ключ (.pem)</span>
+          <small>PKCS#8 PRIVATE KEY</small>
+        </div>
+        <div class="file-box" id="box-cert">
+          <input type="file" id="in-cert" accept=".pem,.crt,.cer,.txt">
+          <span id="lbl-cert">Сертификат (.pem)</span>
+          <small>X.509 CERTIFICATE</small>
+        </div>
+      </div>
+      <div class="url-row">
+        <input type="url" id="in-priv-url" placeholder="URL приватного ключа (private.pem)">
+        <button type="button" class="btn-small" onclick="loadPemFromUrl('priv')">URL</button>
+      </div>
+      <div class="url-row">
+        <input type="url" id="in-cert-url" placeholder="URL сертификата (cert.pem)">
+        <button type="button" class="btn-small" onclick="loadPemFromUrl('cert')">URL</button>
+      </div>
+    </div>
+
+    <button type="button" class="btn-outline" id="btn-export-key" onclick="exportGeneratedPem()">💾 Скачать сгенерированный ключ (.pem) для будущих обновлений</button>
+  </div>
+
+  <button class="btn" onclick="buildApk()">⚡ Собрать и подписать APK</button>
+  <div class="log" id="log">Готов к работе. Выберите template.apk и HTML-файлы.</div>
+</div>
 <script>
-  let tplFile = null;
+  let tplBuffer = null;
+  let tplDisplayName = '';
   let webFiles = [];
   let iconPngBytes = null;
+  let iconWebpBytes = null;
+
+  let customPrivPem = '';
+  let customCertPem = '';
+  let lastGeneratedPrivPem = '';
+  let lastGeneratedCertPem = '';
 
   function log(msg) {
     const el = document.getElementById('log');
@@ -84,14 +142,147 @@
     el.scrollTop = el.scrollHeight;
   }
 
-  document.getElementById('in-tpl').addEventListener('change', e => {
-    if (e.target.files[0]) {
-      tplFile = e.target.files[0];
-      document.getElementById('box-tpl').classList.add('ready');
-      document.getElementById('lbl-tpl').textContent = '✅ ' + tplFile.name;
-      log('Выбран шаблон: ' + tplFile.name + ' (' + tplFile.size + ' байт)');
+  function toggleKeyMode() {
+    const mode = document.getElementById('key-mode').value;
+    document.getElementById('custom-key-panel').style.display = (mode === 'custom') ? 'block' : 'none';
+  }
+
+  function setTemplateReady(buffer, name) {
+    tplBuffer = buffer;
+    tplDisplayName = name;
+    document.getElementById('box-tpl').classList.add('ready');
+    document.getElementById('lbl-tpl').textContent = '✅ ' + name;
+    log('Шаблон загружен: ' + name + ' (' + buffer.byteLength + ' байт)');
+  }
+
+  document.getElementById('in-tpl').addEventListener('change', async e => {
+    const file = e.target.files.item(0);
+    if (file) {
+      const buf = await file.arrayBuffer();
+      setTemplateReady(buf, file.name);
     }
   });
+
+  function normalizeGitHubUrl(url) {
+    let clean = url.trim();
+    const ghHost = atob('Z2l0aHViLmNvbS8=');
+    const rawHost = atob('cmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbS8=');
+    if (clean.includes(ghHost)) {
+      clean = clean
+        .replace(ghHost, rawHost)
+        .replace('/raw/refs/heads/', '/')
+        .replace('/blob/refs/heads/', '/')
+        .replace('/blob/', '/')
+        .replace('/raw/', '/');
+    }
+    return clean;
+  }
+
+  async function loadTemplateFromUrl() {
+    const rawInput = document.getElementById('in-tpl-url').value.trim();
+    if (!rawInput) return alert('Введите ссылку на template.apk!');
+
+    const urlInput = normalizeGitHubUrl(rawInput);
+    if (urlInput !== rawInput) {
+      log('Ссылка GitHub преобразована: ' + urlInput);
+    }
+
+    try {
+      log('Скачивание шаблона по URL...');
+      const res = await fetch(urlInput);
+      if (!res.ok) throw new Error('HTTP статус ' + res.status);
+      const buf = await res.arrayBuffer();
+      const pathPart = urlInput.split('?').at(0);
+      const fileName = pathPart.split('/').pop() || 'remote-template.apk';
+      setTemplateReady(buf, fileName);
+    } catch (err) {
+      log('❌ Ошибка загрузки шаблона по URL: ' + err.message);
+      alert('Не удалось скачать файл по ссылке: ' + err.message);
+    }
+  }
+
+  document.getElementById('in-priv').addEventListener('change', async e => {
+    const file = e.target.files.item(0);
+    if (file) {
+      customPrivPem = await file.text();
+      document.getElementById('box-priv').classList.add('ready');
+      document.getElementById('lbl-priv').textContent = '✅ ' + file.name;
+      log('Загружен приватный ключ: ' + file.name);
+    }
+  });
+
+  document.getElementById('in-cert').addEventListener('change', async e => {
+    const file = e.target.files.item(0);
+    if (file) {
+      customCertPem = await file.text();
+      document.getElementById('box-cert').classList.add('ready');
+      document.getElementById('lbl-cert').textContent = '✅ ' + file.name;
+      log('Загружен сертификат: ' + file.name);
+    }
+  });
+
+  async function loadPemFromUrl(type) {
+    const inputId = (type === 'priv') ? 'in-priv-url' : 'in-cert-url';
+    const rawInput = document.getElementById(inputId).value.trim();
+    if (!rawInput) return alert('Введите ссылку на .pem файл!');
+
+    const urlInput = normalizeGitHubUrl(rawInput);
+    try {
+      log('Скачивание ключа (' + type + ') по URL...');
+      const res = await fetch(urlInput);
+      if (!res.ok) throw new Error('HTTP статус ' + res.status);
+      const text = await res.text();
+      if (type === 'priv') {
+        customPrivPem = text;
+        document.getElementById('box-priv').classList.add('ready');
+        document.getElementById('lbl-priv').textContent = '✅ Ключ загружен по URL';
+        log('Приватный ключ успешно скачан по URL');
+      } else {
+        customCertPem = text;
+        document.getElementById('box-cert').classList.add('ready');
+        document.getElementById('lbl-cert').textContent = '✅ Сертификат загружен по URL';
+        log('Сертификат успешно скачан по URL');
+      }
+    } catch (err) {
+      log('❌ Ошибка загрузки ключа по URL: ' + err.message);
+      alert('Не удалось скачать ключ: ' + err.message);
+    }
+  }
+  function exportGeneratedPem() {
+    if (!lastGeneratedPrivPem || !lastGeneratedCertPem) return;
+    const downloadTxt = (filename, content) => {
+      const blob = new Blob([content], { type: 'application/x-pem-file' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1500);
+    };
+    downloadTxt('private.pem', lastGeneratedPrivPem);
+    setTimeout(() => downloadTxt('cert.pem', lastGeneratedCertPem), 400);
+    log('💾 Скачаны файлы private.pem и cert.pem. Используйте их для подписания будущих обновлений!');
+  }
+
+  function pemToBytes(pemStr) {
+    const b64 = pemStr
+      .replace(/-----BEGIN [^-]+-----/g, '')
+      .replace(/-----END [^-]+-----/g, '')
+      .replace(/\s+/g, '');
+    if (!b64) throw new Error('Пустой или некорректный PEM-файл');
+    const bin = atob(b64);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return bytes;
+  }
+
+  function bytesToPem(bytes, label) {
+    const b64 = toBase64(bytes);
+    const lines = b64.match(/.{1,64}/g) || [];
+    return `-----BEGIN ${label}-----\n${lines.join('\n')}\n-----END ${label}-----\n`;
+  }
 
   document.getElementById('in-html').addEventListener('change', e => {
     if (e.target.files.length) {
@@ -103,7 +294,7 @@
   });
 
   document.getElementById('in-icon').addEventListener('change', e => {
-    const file = e.target.files[0];
+    const file = e.target.files.item(0);
     if (!file) return;
     const reader = new FileReader();
     reader.onload = ev => {
@@ -115,27 +306,29 @@
         const ctx = canvas.getContext('2d');
         ctx.clearRect(0, 0, 192, 192);
         ctx.drawImage(img, 0, 0, 192, 192);
-        canvas.toBlob(async blob => {
-          iconPngBytes = new Uint8Array(await blob.arrayBuffer());
-          document.getElementById('box-icon').classList.add('ready');
-          document.getElementById('lbl-icon').textContent = '✅ Иконка готова (192×192 PNG)';
-          const prev = document.getElementById('icon-preview');
-          prev.src = URL.createObjectURL(blob);
-          prev.style.display = 'block';
-          log('Иконка конвертирована в PNG (' + iconPngBytes.length + ' байт)');
+
+        canvas.toBlob(async pngBlob => {
+          iconPngBytes = new Uint8Array(await pngBlob.arrayBuffer());
+          canvas.toBlob(async webpBlob => {
+            if (webpBlob) iconWebpBytes = new Uint8Array(await webpBlob.arrayBuffer());
+            document.getElementById('box-icon').classList.add('ready');
+            document.getElementById('lbl-icon').textContent = '✅ Иконка готова (PNG + WebP 192×192)';
+            const prev = document.getElementById('icon-preview');
+            prev.src = URL.createObjectURL(pngBlob);
+            prev.style.display = 'block';
+            log('Иконка подготовлена: PNG (' + iconPngBytes.length + ' Б)' + (iconWebpBytes ? ', WebP (' + iconWebpBytes.length + ' Б)' : ''));
+          }, 'image/webp', 0.92);
         }, 'image/png');
       };
       img.src = ev.target.result;
     };
     reader.readAsDataURL(file);
   });
-
-  // --- МИНИМАЛИСТИЧНЫЙ ZIP ПАРСЕР И УПАКОВЩИК С ПОДДЕРЖКОЙ STORE (БЕЗ СЖАТИЯ) ---
+  // --- ZIP ПАРСЕР ---
   function readZip(buffer) {
     const view = new DataView(buffer);
     const bytes = new Uint8Array(buffer);
     const entries = [];
-    // Ищем End of Central Directory (0x06054b50) с конца
     let eocdOffset = -1;
     for (let i = bytes.length - 22; i >= Math.max(0, bytes.length - 65557); i--) {
       if (view.getUint32(i, true) === 0x06054b50) {
@@ -182,7 +375,6 @@
     throw new Error('Неподдерживаемый метод сжатия: ' + entry.method);
   }
 
-  // CRC32 таблица
   const crcTable = new Uint32Array(256);
   for (let i = 0; i < 256; i++) {
     let c = i;
@@ -195,10 +387,9 @@
     return (crc ^ 0xffffffff) >>> 0;
   }
 
-  // Безопасный патчер строк в бинарном AXML (меняем только если длина совпадает или через resources.arsc, чтобы не ломать сдвиги!)
-  function patchManifestSafe(manifestBytes, newLabel, newIconResId) {
+  // --- УНИВЕРСАЛЬНЫЙ ПАТЧЕР ANDROIDMANIFEST.XML (AXML) ---
+  function patchManifestUniversal(manifestBytes, newLabel) {
     const view = new DataView(manifestBytes.buffer, manifestBytes.byteOffset, manifestBytes.byteLength);
-    // Проверяем заголовок AXML (0x00080003)
     if (view.getUint32(0, true) !== 0x00080003) {
       log('⚠️ Нестандартный заголовок манифеста, пропускаем патч AXML');
       return manifestBytes;
@@ -221,80 +412,42 @@
       pos += chunkSize;
     }
 
-    // Ищем индекс атрибута android:label (0x01010001) и android:icon (0x01010002) в ResourceMap
+    if (stringPoolStart === -1 || !newLabel) return manifestBytes;
+
     let labelAttrNameIdx = -1;
-    let iconAttrNameIdx = -1;
     if (resourceMapStart !== -1) {
       for (let i = 0; i < resourceMapCount; i++) {
-        const resId = view.getUint32(resourceMapStart + 8 + i * 4, true);
-        if (resId === 0x01010001) labelAttrNameIdx = i;
-        if (resId === 0x01010002) iconAttrNameIdx = i;
-      }
-    }
-
-    // Проходим по тегам <application> и <activity>
-    pos = 8;
-    let patchedIcon = false;
-    while (pos < totalSize) {
-      const chunkType = view.getUint16(pos, true);
-      const chunkSize = view.getUint32(pos + 4, true);
-      if (chunkType === 0x0102) { // START_TAG
-        const attrCount = view.getUint16(pos + 28, true);
-        let attrPos = pos + 36;
-        for (let a = 0; a < attrCount; a++) {
-          const nameIdx = view.getUint32(attrPos + 4, true);
-          const valStrIdx = view.getUint32(attrPos + 8, true);
-          const valType = manifestBytes[attrPos + 15];
-          const valData = view.getUint32(attrPos + 16, true);
-
-          // Если нашли атрибут android:icon и передан валидный ID существующей иконки
-          if (nameIdx === iconAttrNameIdx && newIconResId !== null) {
-            view.setUint32(attrPos + 8, 0xFFFFFFFF, true); // rawValue = null
-            manifestBytes[attrPos + 15] = 0x01; // TYPE_REFERENCE
-            view.setUint32(attrPos + 16, newIconResId, true);
-            patchedIcon = true;
-          }
-          attrPos += 20;
+        if (view.getUint32(resourceMapStart + 8 + i * 4, true) === 0x01010001) {
+          labelAttrNameIdx = i;
+          break;
         }
       }
-      pos += chunkSize;
     }
 
-    if (patchedIcon) log('Атрибут android:icon привязан к ресурсу 0x' + newIconResId.toString(16));
-
-    // Теперь аккуратно перестраиваем StringPool для замены старого имени приложения на newLabel
-    if (stringPoolStart !== -1 && newLabel) {
-      return rebuildStringPool(manifestBytes, stringPoolStart, newLabel);
-    }
-    return manifestBytes;
-  }
-
-  function rebuildStringPool(axml, spOffset, newLabel) {
-    const view = new DataView(axml.buffer, axml.byteOffset, axml.byteLength);
-    const oldChunkSize = view.getUint32(spOffset + 4, true);
-    const stringCount = view.getUint32(spOffset + 8, true);
-    const styleCount = view.getUint32(spOffset + 12, true);
-    const flags = view.getUint32(spOffset + 16, true);
+    const spView = new DataView(manifestBytes.buffer, manifestBytes.byteOffset + stringPoolStart);
+    const oldChunkSize = spView.getUint32(4, true);
+    const stringCount = spView.getUint32(8, true);
+    const styleCount = spView.getUint32(12, true);
+    const flags = spView.getUint32(16, true);
     const isUtf8 = (flags & (1 << 8)) !== 0;
-    const stringsStart = view.getUint32(spOffset + 20, true);
-    const stylesStart = view.getUint32(spOffset + 24, true);
+    const stringsStart = spView.getUint32(20, true);
+    const stylesStart = spView.getUint32(24, true);
 
-    const offsetsBase = spOffset + 28;
-    const dataBase = spOffset + stringsStart;
+    const offsetsBase = stringPoolStart + 28;
+    const dataBase = stringPoolStart + stringsStart;
     const decoderUtf8 = new TextDecoder('utf-8');
     const decoderUtf16 = new TextDecoder('utf-16le');
 
-    // Читаем все строки
     const strings = [];
     for (let i = 0; i < stringCount; i++) {
       const strOff = view.getUint32(offsetsBase + i * 4, true);
       let p = dataBase + strOff;
       if (isUtf8) {
-        let u16len = axml[p++];
-        if (u16len & 0x80) u16len = ((u16len & 0x7f) << 8) | axml[p++];
-        let u8len = axml[p++];
-        if (u8len & 0x80) u8len = ((u8len & 0x7f) << 8) | axml[p++];
-        strings.push(decoderUtf8.decode(axml.subarray(p, p + u8len)));
+        let u16len = manifestBytes[p++];
+        if (u16len & 0x80) u16len = ((u16len & 0x7f) << 8) | manifestBytes[p++];
+        let u8len = manifestBytes[p++];
+        if (u8len & 0x80) u8len = ((u8len & 0x7f) << 8) | manifestBytes[p++];
+        strings.push(decoderUtf8.decode(manifestBytes.subarray(p, p + u8len)));
       } else {
         let u16len = view.getUint16(p, true);
         p += 2;
@@ -302,24 +455,56 @@
           u16len = ((u16len & 0x7fff) << 16) | view.getUint16(p, true);
           p += 2;
         }
-        strings.push(decoderUtf16.decode(axml.subarray(p, p + u16len * 2)));
+        strings.push(decoderUtf16.decode(manifestBytes.subarray(p, p + u16len * 2)));
       }
     }
+    // Ищем точные индексы строк, используемых в android:label внутри <application> или <activity>
+    const targetStringIndices = new Set();
+    let hasResourceLabel = false;
 
-    // Ищем строку с названием шаблона (обычно HTML App, WebView, App и т.д. — не системный пакет и не android)
-    let replaced = false;
-    for (let i = 0; i < strings.length; i++) {
-      const s = strings[i];
-      if (s === 'HTML App' || s === 'WebViewApp' || s === 'Template' || s === 'My Application') {
-        strings[i] = newLabel;
-        replaced = true;
-        log('Заменено имя в манифесте: "' + s + '" → "' + newLabel + '"');
+    pos = 8;
+    while (pos < totalSize) {
+      const chunkType = view.getUint16(pos, true);
+      const chunkSize = view.getUint32(pos + 4, true);
+      if (chunkType === 0x0102) { // START_TAG
+        const tagNameIdx = view.getUint32(pos + 20, true);
+        const tagName = strings[tagNameIdx];
+        if (tagName === 'application' || tagName === 'activity') {
+          const attrCount = view.getUint16(pos + 28, true);
+          let attrPos = pos + 36;
+          for (let a = 0; a < attrCount; a++) {
+            const nameIdx = view.getUint32(attrPos + 4, true);
+            const valType = manifestBytes[attrPos + 15];
+            const valData = view.getUint32(attrPos + 16, true);
+
+            const isLabelAttr = (nameIdx === labelAttrNameIdx) || (strings[nameIdx] === 'label');
+            if (isLabelAttr) {
+              if (valType === 0x03) { // TYPE_STRING
+                targetStringIndices.add(valData);
+              } else if (valType === 0x01) { // TYPE_REFERENCE (@string/app_name)
+                hasResourceLabel = true;
+              }
+            }
+            attrPos += 20;
+          }
+        }
       }
+      pos += chunkSize;
     }
 
-    if (!replaced) return axml;
+    if (targetStringIndices.size === 0) {
+      if (hasResourceLabel) {
+        log('ℹ️ В шаблоне имя приложения задано через @string/app_name (resources.arsc) — оставлено без изменений во избежание поломки таблицы ресурсов.');
+      }
+      return manifestBytes;
+    }
 
-    // Кодируем пул обратно в том же формате (UTF-8 или UTF-16LE)
+    for (const idx of targetStringIndices) {
+      log('Заменено имя в манифесте: "' + strings[idx] + '" → "' + newLabel + '"');
+      strings[idx] = newLabel;
+    }
+
+    // Пересобираем StringPool
     const encoderUtf8 = new TextEncoder();
     const encodedChunks = [];
     const newOffsets = [];
@@ -350,7 +535,6 @@
       }
     }
 
-    // Выравниваем данные строк по границе 4 байт
     const padLen = (4 - (currentDataOffset % 4)) % 4;
     if (padLen > 0) {
       encodedChunks.push(new Uint8Array(padLen));
@@ -358,29 +542,28 @@
     }
 
     const stylesBytes = (styleCount > 0 && stylesStart > 0)
-      ? axml.subarray(spOffset + stylesStart, spOffset + oldChunkSize)
+      ? manifestBytes.subarray(stringPoolStart + stylesStart, stringPoolStart + oldChunkSize)
       : new Uint8Array(0);
 
     const newStringsStart = 28 + stringCount * 4 + styleCount * 4;
     const newChunkSize = newStringsStart + currentDataOffset + stylesBytes.length;
 
     const newSp = new Uint8Array(newChunkSize);
-    const spView = new DataView(newSp.buffer);
-    spView.setUint16(0, 0x0001, true);
-    spView.setUint16(2, 28, true);
-    spView.setUint32(4, newChunkSize, true);
-    spView.setUint32(8, stringCount, true);
-    spView.setUint32(12, styleCount, true);
-    spView.setUint32(16, flags, true);
-    spView.setUint32(20, newStringsStart, true);
-    spView.setUint32(24, styleCount > 0 ? (newStringsStart + currentDataOffset) : 0, true);
+    const newSpView = new DataView(newSp.buffer);
+    newSpView.setUint16(0, 0x0001, true);
+    newSpView.setUint16(2, 28, true);
+    newSpView.setUint32(4, newChunkSize, true);
+    newSpView.setUint32(8, stringCount, true);
+    newSpView.setUint32(12, styleCount, true);
+    newSpView.setUint32(16, flags, true);
+    newSpView.setUint32(20, newStringsStart, true);
+    newSpView.setUint32(24, styleCount > 0 ? (newStringsStart + currentDataOffset) : 0, true);
 
     for (let i = 0; i < stringCount; i++) {
-      spView.setUint32(28 + i * 4, newOffsets[i], true);
+      newSpView.setUint32(28 + i * 4, newOffsets[i], true);
     }
-    // Копируем смещения стилей если были
     if (styleCount > 0) {
-      newSp.set(axml.subarray(28 + stringCount * 4, 28 + stringCount * 4 + styleCount * 4), 28 + stringCount * 4);
+      newSp.set(manifestBytes.subarray(stringPoolStart + 28 + stringCount * 4, stringPoolStart + 28 + stringCount * 4 + styleCount * 4), 28 + stringCount * 4);
     }
 
     let writePos = newStringsStart;
@@ -390,9 +573,8 @@
     }
     if (stylesBytes.length > 0) newSp.set(stylesBytes, writePos);
 
-    // Собираем итоговый AXML с обновлённым общим размером в заголовке
-    const before = axml.subarray(0, spOffset);
-    const after = axml.subarray(spOffset + oldChunkSize);
+    const before = manifestBytes.subarray(0, stringPoolStart);
+    const after = manifestBytes.subarray(stringPoolStart + oldChunkSize);
     const result = new Uint8Array(before.length + newSp.length + after.length);
     result.set(before, 0);
     result.set(newSp, before.length);
@@ -402,144 +584,8 @@
     resView.setUint32(4, result.length, true);
     return result;
   }
-
-  // --- КРИПТОГРАФИЧЕСКАЯ ПОДПИСЬ JAR v1 (SHA-256 + RSA PKCS#7) ---
-  function toBase64(bytes) {
-    let bin = '';
-    for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
-    return btoa(bin);
-  }
-
-  async function sha256Base64(bytes) {
-    const hash = await crypto.subtle.digest('SHA-256', bytes);
-    return toBase64(new Uint8Array(hash));
-  }
-
-  // ASN.1 DER хелперы для сборки валидного X.509 и PKCS#7 SignedData
-  function derLen(len) {
-    if (len < 0x80) return new Uint8Array([len]);
-    if (len <= 0xff) return new Uint8Array([0x81, len]);
-    return new Uint8Array([0x82, len >> 8, len & 0xff]);
-  }
-  function derTag(tag, content) {
-    const l = derLen(content.length);
-    const res = new Uint8Array(1 + l.length + content.length);
-    res[0] = tag;
-    res.set(l, 1);
-    res.set(content, 1 + l.length);
-    return res;
-  }
-  function derSeq(...items) {
-    const total = items.reduce((a, b) => a + b.length, 0);
-    const buf = new Uint8Array(total);
-    let off = 0;
-    for (const it of items) { buf.set(it, off); off += it.length; }
-    return derTag(0x30, buf);
-  }
-  function derSet(...items) {
-    const total = items.reduce((a, b) => a + b.length, 0);
-    const buf = new Uint8Array(total);
-    let off = 0;
-    for (const it of items) { buf.set(it, off); off += it.length; }
-    return derTag(0x31, buf);
-  }
-  function derInt(bytes) {
-    if (bytes[0] & 0x80) {
-      const padded = new Uint8Array(bytes.length + 1);
-      padded.set(bytes, 1);
-      return derTag(0x02, padded);
-    }
-    return derTag(0x02, bytes);
-  }
-  function derOid(bytes) { return derTag(0x06, new Uint8Array(bytes)); }
-  function derOctet(bytes) { return derTag(0x04, bytes); }
-  function derBitStr(bytes) {
-    const b = new Uint8Array(bytes.length + 1);
-    b.set(bytes, 1);
-    return derTag(0x03, b);
-  }
-  function derUtf8(str) { return derTag(0x0c, new TextEncoder().encode(str)); }
-  function derUtcTime(str) { return derTag(0x17, new TextEncoder().encode(str)); }
-
-  async function signApkEntries(entries) {
-    const encoder = new TextEncoder();
-    let manifestTxt = 'Manifest-Version: 1.0\r\nCreated-By: HTML-APK-Builder\r\n\r\n';
-    let sfEntriesTxt = '';
-
-    for (const e of entries) {
-      if (e.name.startsWith('META-INF/')) continue;
-      const data = await decompressEntry(e);
-      const digest = await sha256Base64(data);
-      const block = `Name: ${e.name}\r\nSHA-256-Digest: ${digest}\r\n\r\n`;
-      manifestTxt += block;
-      const blockDigest = await sha256Base64(encoder.encode(block));
-      sfEntriesTxt += `Name: ${e.name}\r\nSHA-256-Digest: ${blockDigest}\r\n\r\n`;
-    }
-
-    const manifestBytes = encoder.encode(manifestTxt);
-    const fullManifestDigest = await sha256Base64(manifestBytes);
-    const sfTxt = `Signature-Version: 1.0\r\nCreated-By: HTML-APK-Builder\r\nSHA-256-Digest-Manifest: ${fullManifestDigest}\r\n\r\n` + sfEntriesTxt;
-    const sfBytes = encoder.encode(sfTxt);
-
-    // Генерация RSA-2048
-    const keyPair = await crypto.subtle.generateKey(
-      { name: 'RSASSA-PKCS1-v1_5', modulusLength: 2048, publicExponent: new Uint8Array([1, 0, 1]), hash: 'SHA-256' },
-      true, ['sign', 'verify']
-    );
-
-    const spki = new Uint8Array(await crypto.subtle.exportKey('spki', keyPair.publicKey));
-    const sig = new Uint8Array(await crypto.subtle.sign('RSASSA-PKCS1-v1_5', keyPair.privateKey, sfBytes));
-
-    // OIDs
-    const oidSha256WithRsa = derOid([0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x0b]);
-    const oidSha256 = derOid([0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x01]);
-    const oidRsaEnc = derOid([0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x01]);
-    const oidData = derOid([0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x07, 0x01]);
-    const oidSignedData = derOid([0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x07, 0x02]);
-    const oidCn = derOid([0x55, 0x04, 0x03]);
-    const derNull = new Uint8Array([0x05, 0x00]);
-
-    const algSha256WithRsa = derSeq(oidSha256WithRsa, derNull);
-    const algSha256 = derSeq(oidSha256, derNull);
-    const algRsa = derSeq(oidRsaEnc, derNull);
-
-    const name = derSeq(derSet(derSeq(oidCn, derUtf8('Android App'))));
-    const serial = derInt(new Uint8Array([0x01, 0x23, 0x45, 0x67]));
-    const validity = derSeq(derUtcTime('240101000000Z'), derUtcTime('490101000000Z'));
-
-    const tbsCert = derSeq(
-      derTag(0xa0, derInt(new Uint8Array([0x02]))),
-      serial, algSha256WithRsa, name, validity, name, spki
-    );
-    const certSig = new Uint8Array(await crypto.subtle.sign('RSASSA-PKCS1-v1_5', keyPair.privateKey, tbsCert));
-    const cert = derSeq(tbsCert, algSha256WithRsa, derBitStr(certSig));
-
-    const signerInfo = derSeq(
-      derInt(new Uint8Array([0x01])),
-      derSeq(name, serial),
-      algSha256,
-      algRsa,
-      derOctet(sig)
-    );
-
-    const signedData = derSeq(
-      derInt(new Uint8Array([0x01])),
-      derSet(algSha256),
-      derSeq(oidData),
-      derTag(0xa0, cert),
-      derSet(signerInfo)
-    );
-
-    const pkcs7 = derSeq(oidSignedData, derTag(0xa0, signedData));
-
-    return [
-      { name: 'META-INF/MANIFEST.MF', rawData: manifestBytes, method: 0, isRawCompressed: false },
-      { name: 'META-INF/CERT.SF', rawData: sfBytes, method: 0, isRawCompressed: false },
-      { name: 'META-INF/CERT.RSA', rawData: pkcs7, method: 0, isRawCompressed: false }
-    ];
-  }
-
-  function buildZip(entries) {
+  // --- УПАКОВЩИК ZIP С 4-БАЙТОВЫМ ВЫРАВНИВАНИЕМ (ZIPALIGN + TLV EXTRA FIELD) ---
+  function buildAlignedZipParts(entries) {
     const encoder = new TextEncoder();
     const localParts = [];
     const cdParts = [];
@@ -551,9 +597,24 @@
       const crc = e.isRawCompressed ? e.crc : calcCrc32(data);
       const compSize = data.length;
       const uncompSize = e.isRawCompressed ? e.uncompSize : data.length;
-      const method = e.isRawCompressed ? e.method : 0; // STORE без сжатия (максимальная совместимость)
+      const method = e.isRawCompressed ? e.method : 0;
 
-      const lh = new Uint8Array(30 + nameBytes.length);
+      // 4-байтовое выравнивание для несжатых файлов с валидным ZIP extra field (минимум 4 байта: ID + Size)
+      let extraBytes = new Uint8Array(0);
+      if (method === 0) {
+        const dataPosWithoutExtra = offset + 30 + nameBytes.length;
+        const remainder = dataPosWithoutExtra % 4;
+        if (remainder !== 0) {
+          const pad = (4 - remainder) + 4;
+          extraBytes = new Uint8Array(pad);
+          const ev = new DataView(extraBytes.buffer);
+          ev.setUint16(0, 0xFFFF, true);
+          ev.setUint16(2, pad - 4, true);
+        }
+      }
+      const extraLen = extraBytes.length;
+
+      const lh = new Uint8Array(30 + nameBytes.length + extraLen);
       const lhv = new DataView(lh.buffer);
       lhv.setUint32(0, 0x04034b50, true);
       lhv.setUint16(4, 20, true);
@@ -565,8 +626,9 @@
       lhv.setUint32(18, compSize, true);
       lhv.setUint32(22, uncompSize, true);
       lhv.setUint16(26, nameBytes.length, true);
-      lhv.setUint16(28, 0, true);
+      lhv.setUint16(28, extraLen, true);
       lh.set(nameBytes, 30);
+      if (extraLen > 0) lh.set(extraBytes, 30 + nameBytes.length);
 
       localParts.push(lh, data);
 
@@ -607,57 +669,337 @@
     ev.setUint32(16, offset, true);
     ev.setUint16(20, 0, true);
 
-    return new Blob([...localParts, ...cdParts, eocd], { type: 'application/vnd.android.package-archive' });
+    return {
+      localBytes: concatUint8Arrays(localParts),
+      cdBytes: concatUint8Arrays(cdParts),
+      eocdBytes: eocd
+    };
   }
 
+  function concatUint8Arrays(arrays) {
+    const total = arrays.reduce((sum, a) => sum + a.length, 0);
+    const res = new Uint8Array(total);
+    let off = 0;
+    for (const a of arrays) {
+      res.set(a, off);
+      off += a.length;
+    }
+    return res;
+  }
+
+  // --- ASN.1 DER ХЕЛПЕРЫ ---
+  function toBase64(bytes) {
+    let bin = '';
+    for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    return btoa(bin);
+  }
+
+  async function sha256Base64(bytes) {
+    const hash = await crypto.subtle.digest('SHA-256', bytes);
+    return toBase64(new Uint8Array(hash));
+  }
+
+  function derLen(len) {
+    if (len < 0x80) return new Uint8Array([len]);
+    if (len <= 0xff) return new Uint8Array([0x81, len]);
+    return new Uint8Array([0x82, len >> 8, len & 0xff]);
+  }
+  function derTag(tag, content) {
+    const l = derLen(content.length);
+    const res = new Uint8Array(1 + l.length + content.length);
+    res.set([tag], 0);
+    res.set(l, 1);
+    res.set(content, 1 + l.length);
+    return res;
+  }
+  function derSeq(...items) { return derTag(0x30, concatUint8Arrays(items)); }
+  function derSet(...items) { return derTag(0x31, concatUint8Arrays(items)); }
+  function derInt(bytes) {
+    if (bytes.at(0) & 0x80) {
+      const padded = new Uint8Array(bytes.length + 1);
+      padded.set(bytes, 1);
+      return derTag(0x02, padded);
+    }
+    return derTag(0x02, bytes);
+  }
+  function derOid(bytes) { return derTag(0x06, new Uint8Array(bytes)); }
+  function derOctet(bytes) { return derTag(0x04, bytes); }
+  function derBitStr(bytes) {
+    const b = new Uint8Array(bytes.length + 1);
+    b.set(bytes, 1);
+    return derTag(0x03, b);
+  }
+  function derUtf8(str) { return derTag(0x0c, new TextEncoder().encode(str)); }
+  function derUtcTime(str) { return derTag(0x17, new TextEncoder().encode(str)); }
+  // Извлечение SubjectPublicKeyInfo (SPKI) из X.509 DER сертификата
+  function extractSpkiFromX509(certDer) {
+    function readLen(buf, offset) {
+      const first = buf[offset];
+      if (first < 0x80) return { len: first, bytesRead: 1 };
+      const numBytes = first & 0x7f;
+      let len = 0;
+      for (let i = 0; i < numBytes; i++) len = (len << 8) | buf[offset + 1 + i];
+      return { len, bytesRead: 1 + numBytes };
+    }
+    function nextTlv(buf, offset) {
+      const tag = buf[offset];
+      const { len, bytesRead } = readLen(buf, offset + 1);
+      const headerLen = 1 + bytesRead;
+      return { tag, headerLen, len, totalLen: headerLen + len, end: offset + headerLen + len };
+    }
+
+    // Certificate SEQUENCE -> tbsCertificate SEQUENCE
+    const certTlv = nextTlv(certDer, 0);
+    const tbsTlv = nextTlv(certDer, certTlv.headerLen);
+    let pos = certTlv.headerLen + tbsTlv.headerLen;
+
+    // Если первый элемент version [0] EXPLICIT, пропускаем его
+    if (certDer[pos] === 0xa0) {
+      pos = nextTlv(certDer, pos).end;
+    }
+    // Пропускаем: serialNumber, signature, issuer, validity, subject (5 полей)
+    for (let i = 0; i < 5; i++) {
+      pos = nextTlv(certDer, pos).end;
+    }
+    // Следующий элемент — subjectPublicKeyInfo (SPKI)
+    const spkiTlv = nextTlv(certDer, pos);
+    return certDer.slice(pos, spkiTlv.end);
+  }
+
+  async function createV1SignatureEntries(entries, privateKey, certDer) {
+    const encoder = new TextEncoder();
+    let manifestTxt = 'Manifest-Version: 1.0\r\nCreated-By: HTML-APK-Builder\r\n\r\n';
+    let sfEntriesTxt = '';
+
+    for (const e of entries) {
+      if (e.name.startsWith('META-INF/')) continue;
+      const data = await decompressEntry(e);
+      const digest = await sha256Base64(data);
+      const block = `Name: ${e.name}\r\nSHA-256-Digest: ${digest}\r\n\r\n`;
+      manifestTxt += block;
+      const blockDigest = await sha256Base64(encoder.encode(block));
+      sfEntriesTxt += `Name: ${e.name}\r\nSHA-256-Digest: ${blockDigest}\r\n\r\n`;
+    }
+
+    const manifestBytes = encoder.encode(manifestTxt);
+    const fullManifestDigest = await sha256Base64(manifestBytes);
+    const sfTxt = `Signature-Version: 1.0\r\nCreated-By: HTML-APK-Builder\r\nSHA-256-Digest-Manifest: ${fullManifestDigest}\r\n\r\n` + sfEntriesTxt;
+    const sfBytes = encoder.encode(sfTxt);
+
+    const sig = new Uint8Array(await crypto.subtle.sign('RSASSA-PKCS1-v1_5', privateKey, sfBytes));
+
+    const oidSha256 = derOid([0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x01]);
+    const oidRsaEnc = derOid([0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x01]);
+    const oidData = derOid([0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x07, 0x01]);
+    const oidSignedData = derOid([0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x07, 0x02]);
+    const oidCn = derOid([0x55, 0x04, 0x03]);
+    const derNull = new Uint8Array([0x05, 0x00]);
+
+    const algSha256 = derSeq(oidSha256, derNull);
+    const algRsa = derSeq(oidRsaEnc, derNull);
+    const name = derSeq(derSet(derSeq(oidCn, derUtf8('Android App'))));
+    const serial = derInt(new Uint8Array([0x01, 0x23, 0x45, 0x67]));
+
+    const signerInfo = derSeq(
+      derInt(new Uint8Array([0x01])),
+      derSeq(name, serial),
+      algSha256,
+      algRsa,
+      derOctet(sig)
+    );
+
+    const signedData = derSeq(
+      derInt(new Uint8Array([0x01])),
+      derSet(algSha256),
+      derSeq(oidData),
+      derTag(0xa0, certDer),
+      derSet(signerInfo)
+    );
+
+    const pkcs7 = derSeq(oidSignedData, derTag(0xa0, signedData));
+
+    return [
+      { name: 'META-INF/MANIFEST.MF', rawData: manifestBytes, method: 0, isRawCompressed: false },
+      { name: 'META-INF/CERT.SF', rawData: sfBytes, method: 0, isRawCompressed: false },
+      { name: 'META-INF/CERT.RSA', rawData: pkcs7, method: 0, isRawCompressed: false }
+    ];
+  }
+
+  // Хелперы для APK Signature Scheme v2
+  function u32le(val) {
+    const b = new Uint8Array(4);
+    new DataView(b.buffer).setUint32(0, val, true);
+    return b;
+  }
+  function u64le(val) {
+    const b = new Uint8Array(8);
+    new DataView(b.buffer).setBigUint64(0, BigInt(val), true);
+    return b;
+  }
+  function lenPrefixed32(bytes) {
+    return concatUint8Arrays([u32le(bytes.length), bytes]);
+  }
+
+  async function computeApkV2Digest(sectionBytes) {
+    const CHUNK_SIZE = 1024 * 1024;
+    const chunkDigests = [];
+    for (let off = 0; off < sectionBytes.length; off += CHUNK_SIZE) {
+      const slice = sectionBytes.subarray(off, Math.min(off + CHUNK_SIZE, sectionBytes.length));
+      const chunkBuf = new Uint8Array(5 + slice.length);
+      chunkBuf.set([0xa5], 0);
+      new DataView(chunkBuf.buffer).setUint32(1, slice.length, true);
+      chunkBuf.set(slice, 5);
+      const h = new Uint8Array(await crypto.subtle.digest('SHA-256', chunkBuf));
+      chunkDigests.push(h);
+    }
+    if (sectionBytes.length === 0) {
+      const emptyChunk = new Uint8Array([0xa5, 0, 0, 0, 0]);
+      chunkDigests.push(new Uint8Array(await crypto.subtle.digest('SHA-256', emptyChunk)));
+    }
+    return chunkDigests;
+  }
+  async function applyApkSignatureV2(zipParts, privateKey, spkiDer, certDer) {
+    const { localBytes, cdBytes, eocdBytes } = zipParts;
+
+    // 1. Заранее вычисляем точную длину APK Signing Block с фиктивными буферами
+    const ALG_ID = 0x0103;
+    const dummyDigest = new Uint8Array(32);
+    // Узнаём реальную длину подписи RSA (обычно 256 байт для RSA-2048 или 512 для RSA-4096)
+    const testSig = new Uint8Array(await crypto.subtle.sign('RSASSA-PKCS1-v1_5', privateKey, new Uint8Array([1, 2, 3])));
+    const dummySig = new Uint8Array(testSig.length);
+
+    const dummySignedData = concatUint8Arrays([
+      lenPrefixed32(lenPrefixed32(concatUint8Arrays([u32le(ALG_ID), lenPrefixed32(dummyDigest)]))),
+      lenPrefixed32(lenPrefixed32(certDer)),
+      lenPrefixed32(new Uint8Array(0))
+    ]);
+    const dummySigner = lenPrefixed32(concatUint8Arrays([
+      lenPrefixed32(dummySignedData),
+      lenPrefixed32(lenPrefixed32(concatUint8Arrays([u32le(ALG_ID), lenPrefixed32(dummySig)]))),
+      lenPrefixed32(spkiDer)
+    ]));
+    const dummyPairBody = concatUint8Arrays([u32le(0x7109871a), lenPrefixed32(dummySigner)]);
+    const dummyPairEntry = concatUint8Arrays([u64le(dummyPairBody.length), dummyPairBody]);
+
+    const magic = new TextEncoder().encode('APK Sig Block 42');
+    const baseSize = 8 + dummyPairEntry.length + 8 + 16;
+    const padSize = (4096 - ((localBytes.length + baseSize) % 4096)) % 4096;
+    const totalSigBlockLen = baseSize + padSize;
+
+    // 2. Обновляем EOCD с реальным новым смещением Central Directory ДО подсчёта дайджеста
+    const newCdOffset = localBytes.length + totalSigBlockLen;
+    const finalEocd = new Uint8Array(eocdBytes);
+    new DataView(finalEocd.buffer).setUint32(16, newCdOffset, true);
+
+    // 3. Вычисляем дайджесты чанков по 1 МБ для Local Entries, Central Directory и финального EOCD
+    const d1 = await computeApkV2Digest(localBytes);
+    const d2 = await computeApkV2Digest(cdBytes);
+    const d3 = await computeApkV2Digest(finalEocd);
+    const allChunkDigests = [...d1, ...d2, ...d3];
+
+    const topLevelInput = new Uint8Array(5 + allChunkDigests.length * 32);
+    topLevelInput.set([0x5a], 0);
+    new DataView(topLevelInput.buffer).setUint32(1, allChunkDigests.length, true);
+    let ptr = 5;
+    for (const d of allChunkDigests) {
+      topLevelInput.set(d, ptr);
+      ptr += 32;
+    }
+    const rootDigest = new Uint8Array(await crypto.subtle.digest('SHA-256', topLevelInput));
+
+    // 4. Формируем реальный signedData с настоящим rootDigest
+    const digestEntry = lenPrefixed32(concatUint8Arrays([u32le(ALG_ID), lenPrefixed32(rootDigest)]));
+    const signedDataBytes = concatUint8Arrays([
+      lenPrefixed32(digestEntry),
+      lenPrefixed32(lenPrefixed32(certDer)),
+      lenPrefixed32(new Uint8Array(0))
+    ]);
+
+    // 5. Подписываем signedData приватным ключом
+    const signatureBytes = new Uint8Array(await crypto.subtle.sign('RSASSA-PKCS1-v1_5', privateKey, signedDataBytes));
+    const sigEntry = lenPrefixed32(concatUint8Arrays([u32le(ALG_ID), lenPrefixed32(signatureBytes)]));
+
+    const signerBytes = lenPrefixed32(concatUint8Arrays([
+      lenPrefixed32(signedDataBytes),
+      lenPrefixed32(sigEntry),
+      lenPrefixed32(spkiDer)
+    ]));
+    const pairBody = concatUint8Arrays([u32le(0x7109871a), lenPrefixed32(signerBytes)]);
+    const pairEntry = concatUint8Arrays([u64le(pairBody.length), pairBody]);
+
+    const padding = new Uint8Array(padSize);
+    const blockSizeValue = pairEntry.length + padSize + 8 + 16;
+    const apkSigBlock = concatUint8Arrays([
+      u64le(blockSizeValue),
+      pairEntry,
+      padding,
+      u64le(blockSizeValue),
+      magic
+    ]);
+
+    return new Blob([localBytes, apkSigBlock, cdBytes, finalEocd], {
+      type: 'application/vnd.android.package-archive'
+    });
+  }
+  // --- ОСНОВНАЯ СБОРКА ---
   async function buildApk() {
     try {
-      if (!tplFile) return alert('Сначала выберите template.apk!');
+      if (!tplBuffer) return alert('Сначала выберите template.apk или загрузите его по ссылке!');
       if (!webFiles.length) return alert('Выберите хотя бы один HTML-файл!');
 
-      log('--- Начинаем сборку ---');
-      const tplBuf = await tplFile.arrayBuffer();
-      const origEntries = readZip(tplBuf);
+      const sigScheme = document.getElementById('sig-scheme').value;
+      const keyMode = document.getElementById('key-mode').value;
 
+      log('--- Начинаем сборку (схема подписи: ' + sigScheme.toUpperCase() + ') ---');
+      const origEntries = readZip(tplBuffer);
       const newEntries = [];
-      let existingIconPath = null;
-      let existingIconResId = null;
+      let replacedIconsCount = 0;
 
-      // Проверяем, есть ли в оригинальном шаблоне какая-либо картинка в res/
-      for (const e of origEntries) {
-        if (e.name.startsWith('res/') && e.name.endsWith('.png')) {
-          existingIconPath = e.name;
-        }
+      function isAppIconEntry(entryName) {
+        const lower = entryName.toLowerCase();
+        if (!lower.startsWith('res/')) return false;
+        if (!lower.endsWith('.png') && !lower.endsWith('.webp')) return false;
+        if (lower.endsWith('.9.png')) return false;
+        const fileName = lower.split('/').pop();
+        if (fileName.startsWith('abc_') || fileName.startsWith('notification_') || fileName.startsWith('design_')) return false;
+        return lower.includes('mipmap') || fileName.includes('ic_launcher') || fileName.includes('app_icon') || fileName.includes('icon');
       }
 
-      // Копируем системные файлы шаблона (кроме старых assets/www/ и META-INF/)
       for (const e of origEntries) {
         if (e.name.startsWith('META-INF/') || e.name.startsWith('assets/www/')) continue;
 
         if (e.name === 'resources.arsc') {
-          // Сохраняем оригинальный resources.arsc без сжатия (STORE), чтобы не вызвать ошибку синтаксиса!
           const rawArsc = await decompressEntry(e);
           newEntries.push({ name: 'resources.arsc', rawData: rawArsc, method: 0, isRawCompressed: false });
-          log('Оригинальный resources.arsc сохранён без сжатия (' + rawArsc.length + ' байт)');
-        } else if (existingIconPath && e.name === existingIconPath && iconPngBytes) {
-          // Если в шаблоне была своя PNG иконка — заменяем её на новую!
-          newEntries.push({ name: e.name, rawData: iconPngBytes, method: 0, isRawCompressed: false });
-          log('Заменена иконка шаблона: ' + e.name);
+          log('resources.arsc сохранён без сжатия (' + rawArsc.length + ' байт)');
+        } else if (iconPngBytes && isAppIconEntry(e.name)) {
+          const isWebp = e.name.toLowerCase().endsWith('.webp');
+          const targetBytes = (isWebp && iconWebpBytes) ? iconWebpBytes : iconPngBytes;
+          newEntries.push({ name: e.name, rawData: targetBytes, method: 0, isRawCompressed: false });
+          replacedIconsCount++;
         } else if (e.name === 'AndroidManifest.xml') {
           const rawManifest = await decompressEntry(e);
           const appLabel = document.getElementById('app-label').value.trim();
-          const patchedManifest = patchManifestSafe(rawManifest, appLabel, null);
+          const patchedManifest = patchManifestUniversal(rawManifest, appLabel);
           newEntries.push({ name: 'AndroidManifest.xml', rawData: patchedManifest, method: 0, isRawCompressed: false });
         } else {
-          newEntries.push(e);
+          if (e.name.endsWith('.so') && e.method === 0) {
+            const rawSo = await decompressEntry(e);
+            newEntries.push({ name: e.name, rawData: rawSo, method: 0, isRawCompressed: false });
+          } else {
+            newEntries.push(e);
+          }
         }
       }
 
-      if (iconPngBytes && !existingIconPath) {
-        log('ℹ️ В этом template.apk не заложена папка res/ с иконкой — иконка пропущена во избежание ошибки синтаксиса пакета.');
+      if (iconPngBytes) {
+        if (replacedIconsCount > 0) {
+          log('✅ Заменено иконок в res/: ' + replacedIconsCount + ' шт. (PNG/WebP)');
+        } else {
+          log('ℹ️ Растровые иконки лаунчера в res/ не найдены — оставлено без изменений.');
+        }
       }
 
-      // Добавляем HTML/CSS/JS файлы в assets/www/
       for (let i = 0; i < webFiles.length; i++) {
         const f = webFiles[i];
         const data = new Uint8Array(await f.arrayBuffer());
@@ -674,11 +1016,77 @@
         log('Упакован файл: assets/www/' + targetName);
       }
 
-      log('Генерация RSA-2048 ключа и подпись APK...');
-      const sigEntries = await signApkEntries(newEntries);
-      const finalEntries = [...newEntries, ...sigEntries];
+      let privateKey = null;
+      let spkiDer = null;
+      let certDer = null;
 
-      const apkBlob = buildZip(finalEntries);
+      if (keyMode === 'custom') {
+        if (!customPrivPem || !customCertPem) {
+          return alert('Загрузите оба файла: приватный ключ (.pem) и сертификат (.pem)!');
+        }
+        log('Импорт пользовательского ключа и сертификата X.509...');
+        const privDer = pemToBytes(customPrivPem);
+        certDer = pemToBytes(customCertPem);
+        privateKey = await crypto.subtle.importKey(
+          'pkcs8',
+          privDer,
+          { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+          false,
+          ['sign']
+        );
+        spkiDer = extractSpkiFromX509(certDer);
+        log('✅ Пользовательский ключ успешно применён');
+      } else {
+        log('Генерация нового ключа RSA-2048 и сертификата X.509...');
+        const keyPair = await crypto.subtle.generateKey(
+          { name: 'RSASSA-PKCS1-v1_5', modulusLength: 2048, publicExponent: Uint8Array.of(1, 0, 1), hash: 'SHA-256' },
+          true, ['sign', 'verify']
+        );
+        privateKey = keyPair.privateKey;
+        spkiDer = new Uint8Array(await crypto.subtle.exportKey('spki', keyPair.publicKey));
+        const pkcs8Der = new Uint8Array(await crypto.subtle.exportKey('pkcs8', keyPair.privateKey));
+
+        const oidSha256WithRsa = derOid([0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x0b]);
+        const oidCn = derOid([0x55, 0x04, 0x03]);
+        const derNull = new Uint8Array([0x05, 0x00]);
+        const algSha256WithRsa = derSeq(oidSha256WithRsa, derNull);
+        const name = derSeq(derSet(derSeq(oidCn, derUtf8('Android App'))));
+        const serial = derInt(new Uint8Array([0x01, 0x23, 0x45, 0x67]));
+        const validity = derSeq(derUtcTime('240101000000Z'), derUtcTime('490101000000Z'));
+
+        const tbsCert = derSeq(
+          derTag(0xa0, derInt(new Uint8Array([0x02]))),
+          serial, algSha256WithRsa, name, validity, name, spkiDer
+        );
+        const certSig = new Uint8Array(await crypto.subtle.sign('RSASSA-PKCS1-v1_5', privateKey, tbsCert));
+        certDer = derSeq(tbsCert, algSha256WithRsa, derBitStr(certSig));
+
+        lastGeneratedPrivPem = bytesToPem(pkcs8Der, 'PRIVATE KEY');
+        lastGeneratedCertPem = bytesToPem(certDer, 'CERTIFICATE');
+        document.getElementById('btn-export-key').style.display = 'block';
+      }
+
+      let entriesToPack = [...newEntries];
+
+      if (sigScheme === 'v1' || sigScheme === 'v1v2') {
+        log('Наложение подписи JAR v1 (META-INF)...');
+        const v1Entries = await createV1SignatureEntries(newEntries, privateKey, certDer);
+        entriesToPack = [...entriesToPack, ...v1Entries];
+      }
+
+      log('Упаковка ZIP с 4-байтовым выравниванием (zipalign)...');
+      const zipParts = buildAlignedZipParts(entriesToPack);
+
+      let apkBlob = null;
+      if (sigScheme === 'v2' || sigScheme === 'v1v2') {
+        log('Наложение подписи APK Signature Scheme v2...');
+        apkBlob = await applyApkSignatureV2(zipParts, privateKey, spkiDer, certDer);
+      } else {
+        apkBlob = new Blob([zipParts.localBytes, zipParts.cdBytes, zipParts.eocdBytes], {
+          type: 'application/vnd.android.package-archive'
+        });
+      }
+
       const rawFilename = document.getElementById('apk-filename').value.trim().replace(/[^a-zA-Z0-9_-]/g, '') || 'App';
       const finalFilename = rawFilename + '.apk';
 
@@ -691,7 +1099,7 @@
       document.body.removeChild(a);
       setTimeout(() => URL.revokeObjectURL(url), 2000);
 
-      log('🎉 Готово! Скачан файл: ' + finalFilename);
+      log('🎉 Готово! Скачан файл: ' + finalFilename + ' (' + apkBlob.size + ' байт)');
     } catch (err) {
       log('❌ Ошибка: ' + err.message);
       alert('Ошибка сборки: ' + err.message);

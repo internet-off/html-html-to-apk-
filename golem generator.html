@@ -1,0 +1,3078 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Android APK Shell Generator Pro (100% Pure JS)</title>
+<style>
+  :root {
+    --bg: #0b0d13;
+    --surface: #141720;
+    --surface-hover: #1b1f2b;
+    --border: #262b38;
+    --text: #e8eaf2;
+    --text-muted: #8a92a6;
+    --primary: #3b82f6;
+    --primary-hover: #2563eb;
+    --accent: #10b981;
+    --danger: #ef4444;
+    --warn: #f59e0b;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.45;
+    padding: 14px;
+    padding-bottom: 90px;
+  }
+  .container {
+    max-width: 980px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  header {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+  }
+  header h1 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .badge {
+    font-size: 0.7rem;
+    background: rgba(59, 130, 246, 0.16);
+    color: var(--primary);
+    border: 1px solid rgba(59, 130, 246, 0.35);
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-weight: 600;
+  }
+  details.acc {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  details.acc summary {
+    padding: 14px 18px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    user-select: none;
+    list-style: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--surface);
+    transition: background 0.15s;
+  }
+  details.acc summary::-webkit-details-marker { display: none; }
+  details.acc summary:hover { background: var(--surface-hover); }
+  details.acc summary::after {
+    content: "▾";
+    color: var(--text-muted);
+    font-size: 1.1rem;
+    transition: transform 0.2s;
+  }
+  details.acc[open] summary {
+    border-bottom: 1px solid var(--border);
+  }
+  details.acc[open] summary::after {
+    transform: rotate(180deg);
+  }
+  .acc-body {
+    padding: 16px 18px;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 12px;
+  }
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .span-2 { grid-column: span 2; }
+  @media (max-width: 600px) { .span-2 { grid-column: span 1; } }
+  label {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+  input[type="text"],
+  input[type="number"],
+  select {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 11px;
+    border-radius: 7px;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  input:focus, select:focus { border-color: var(--primary); }
+  input[type="color"] {
+    width: 100%;
+    height: 36px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 2px 4px;
+    cursor: pointer;
+  }
+  .input-row { display: flex; gap: 8px; }
+  .btn {
+    background: var(--surface-hover);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 13px;
+    border-radius: 7px;
+    font-size: 0.84rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .btn:hover { background: #262c3d; }
+  .btn:active { transform: translateY(1px); }
+  .btn-primary {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+    padding: 13px 20px;
+    font-size: 0.98rem;
+    width: 100%;
+  }
+  .btn-primary:hover { background: var(--primary-hover); }
+  .btn-sm { padding: 5px 9px; font-size: 0.76rem; }
+  .checkbox-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(245px, 1fr));
+    gap: 9px;
+    margin-top: 12px;
+  }
+  .cb-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    padding: 8px 10px;
+    border-radius: 7px;
+    cursor: pointer;
+    user-select: none;
+    font-size: 0.84rem;
+  }
+  .cb-item:hover { border-color: #3a4257; }
+  .cb-item input[type="checkbox"] {
+    margin-top: 3px;
+    accent-color: var(--primary);
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+  }
+  .cb-sub {
+    display: block;
+    font-size: 0.73rem;
+    color: var(--text-muted);
+    margin-top: 1px;
+    word-break: break-all;
+  }
+  .perm-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-bottom: 10px;
+  }
+  .perm-controls input { flex: 1; min-width: 190px; }
+  .perm-group-title {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--primary);
+    margin: 14px 0 7px;
+    font-weight: 700;
+  }
+  .custom-perm-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+  }
+  .tag {
+    background: rgba(16, 185, 129, 0.14);
+    border: 1px solid rgba(16, 185, 129, 0.35);
+    color: var(--accent);
+    padding: 3px 9px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .tag button {
+    background: none;
+    border: none;
+    color: inherit;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 0.95rem;
+    line-height: 1;
+  }
+  .log-box {
+    background: #07090d;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 12px;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 0.78rem;
+    color: #a5b4fc;
+    max-height: 280px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+    margin-top: 12px;
+  }
+  .log-ok { color: #34d399; }
+  .log-warn { color: #fbbf24; }
+  .log-err { color: #f87171; }
+  .error-hint {
+    color: var(--danger);
+    font-size: 0.76rem;
+    display: none;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>Android APK Shell Generator Pro <span class="badge">Pure JS • AXML + ARSC + DEX</span></h1>
+    <div style="font-size: 0.8rem; color: var(--text-muted);">Автономный синтез template.apk (Android 5–16+)</div>
+  </header>
+
+  <!-- 1. Идентификация и SDK -->
+  <details class="acc" open>
+    <summary>1. Идентификация и SDK</summary>
+    <div class="acc-body">
+      <div class="grid">
+        <div class="field span-2">
+          <label for="pkgName">Package Name (уникальный идентификатор)</label>
+          <div class="input-row">
+            <input type="text" id="pkgName" value="com.app.id482910" placeholder="com.example.myapp">
+            <button type="button" class="btn" id="btnGenPkg">Случайный</button>
+          </div>
+          <span class="error-hint" id="pkgError">Некорректный Package Name (латинские буквы, цифры, минимум 2 сегмента через точку).</span>
+        </div>
+        <div class="field">
+          <label for="appName">Название приложения (app_name)</label>
+          <input type="text" id="appName" value="WebApp Shell" placeholder="Моё приложение">
+        </div>
+        <div class="field">
+          <label for="versionCode">versionCode (целое число)</label>
+          <input type="number" id="versionCode" value="1" min="1">
+        </div>
+        <div class="field">
+          <label for="versionName">versionName (строка)</label>
+          <input type="text" id="versionName" value="1.0.0">
+        </div>
+        <div class="field">
+          <label for="minSdk">minSdkVersion</label>
+          <input type="number" id="minSdk" value="21" min="16" max="36">
+        </div>
+        <div class="field">
+          <label for="targetSdk">targetSdkVersion</label>
+          <input type="number" id="targetSdk" value="34" min="21" max="36">
+        </div>
+      </div>
+      <div class="checkbox-grid">
+        <label class="cb-item">
+          <input type="checkbox" id="optAllowBackup" checked>
+          <div>Разрешить резервное копирование<span class="cb-sub">android:allowBackup="true"</span></div>
+        </label>
+      </div>
+    </div>
+  </details>
+
+  <!-- 2. Окно и внешний вид -->
+  <details class="acc" open>
+    <summary>2. Окно и внешний вид</summary>
+    <div class="acc-body">
+      <div class="grid">
+        <div class="field">
+          <label for="themeSelect">Верхняя полоска заголовка (Тема)</label>
+          <select id="themeSelect">
+            <option value="noactionbar" selected>Theme.DeviceDefault.NoActionBar (Без заголовка)</option>
+            <option value="actionbar">Theme.DeviceDefault (С системным ActionBar)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="orientationSelect">Ориентация экрана</label>
+          <select id="orientationSelect">
+            <option value="unspecified" selected>unspecified (Авто / системная)</option>
+            <option value="portrait">portrait (Только портретная)</option>
+            <option value="landscape">landscape (Только альбомная)</option>
+            <option value="sensorPortrait">sensorPortrait (Портретная 180°)</option>
+            <option value="sensorLandscape">sensorLandscape (Альбомная 180°)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="softInputSelect">Поведение клавиатуры (windowSoftInputMode)</label>
+          <select id="softInputSelect">
+            <option value="adjustResize" selected>adjustResize (Сжимать окно под клавиатуру)</option>
+            <option value="adjustPan">adjustPan (Сдвигать окно вверх)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="statusBarColor">Цвет статус-бара (statusBarColor)</label>
+          <input type="color" id="statusBarColor" value="#0b0d13">
+        </div>
+        <div class="field">
+          <label for="navBarColor">Цвет нижней панели (navigationBarColor)</label>
+          <input type="color" id="navBarColor" value="#0b0d13">
+        </div>
+      </div>
+      <div class="checkbox-grid">
+        <label class="cb-item">
+          <input type="checkbox" id="optFullscreen">
+          <div>Скрыть статус-бар<span class="cb-sub">FLAG_FULLSCREEN</span></div>
+        </label>
+        <label class="cb-item">
+          <input type="checkbox" id="optImmersive">
+          <div>Скрыть панель навигации<span class="cb-sub">Immersive Sticky Mode</span></div>
+        </label>
+        <label class="cb-item">
+          <input type="checkbox" id="optCutout" checked>
+          <div>Работа поверх выреза камеры<span class="cb-sub">layoutInDisplayCutoutMode = SHORT_EDGES</span></div>
+        </label>
+        <label class="cb-item">
+          <input type="checkbox" id="optKeepScreen">
+          <div>Не выключать экран<span class="cb-sub">FLAG_KEEP_SCREEN_ON</span></div>
+        </label>
+        <label class="cb-item">
+          <input type="checkbox" id="optSecure">
+          <div>Запретить скриншоты<span class="cb-sub">FLAG_SECURE</span></div>
+        </label>
+        <label class="cb-item">
+          <input type="checkbox" id="optHwAccel" checked>
+          <div>Аппаратное ускорение<span class="cb-sub">android:hardwareAccelerated="true"</span></div>
+        </label>
+        <label class="cb-item">
+          <input type="checkbox" id="optCleartext" checked>
+          <div>Разрешить HTTP без SSL<span class="cb-sub">android:usesCleartextTraffic="true"</span></div>
+        </label>
+      </div>
+    </div>
+  </details>
+  <!-- 3. Движок View, WebView и JS Bridge -->
+  <details class="acc" open>
+    <summary>3. Движок View, WebView и JS Bridge</summary>
+    <div class="acc-body">
+      <div class="grid">
+        <div class="field">
+          <label for="viewMode">Режим отображения (View Mode)</label>
+          <select id="viewMode">
+            <option value="webview" selected>Встроенный WebView (Полноэкранный)</option>
+            <option value="chooser">Системный выбор приложения (Chooser)</option>
+          </select>
+        </div>
+        <div class="field span-2">
+          <label for="startUrl">Стартовый путь или URL</label>
+          <input type="text" id="startUrl" value="file:///android_asset/www/index.html" placeholder="file:///android_asset/www/index.html или https://...">
+        </div>
+        <div class="field">
+          <label for="uaPreset">Пресет User-Agent</label>
+          <select id="uaPreset">
+            <option value="">По умолчанию (Системный WebView)</option>
+            <option value="Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36">Android Mobile (Chrome 131)</option>
+            <option value="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36">Desktop Windows (Chrome 131)</option>
+            <option value="Mozilla/5.0 (iPhone; CPU iPhone OS 18_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.1 Mobile/15E148 Safari/604.1">iOS iPhone (Safari 18.1)</option>
+            <option value="custom">Свой User-Agent...</option>
+          </select>
+        </div>
+        <div class="field span-2">
+          <label for="customUa">Строка User-Agent (если выбран пресет или свой)</label>
+          <input type="text" id="customUa" placeholder="Оставьте пустым для системного User-Agent">
+        </div>
+        <div class="field">
+          <label for="cacheMode">Режим кэширования WebView</label>
+          <select id="cacheMode">
+            <option value="-1" selected>LOAD_DEFAULT (Стандартный)</option>
+            <option value="2">LOAD_NO_CACHE (Без кэша, всегда сеть)</option>
+            <option value="1">LOAD_CACHE_ELSE_NETWORK (Кэш, иначе сеть)</option>
+            <option value="3">LOAD_CACHE_ONLY (Только из кэша)</option>
+          </select>
+        </div>
+      </div>
+      <div class="checkbox-grid">
+        <label class="cb-item">
+          <input type="checkbox" id="wvBridge" checked>
+          <div>Нативный window.AndroidBridge<span class="cb-sub">vibrate, showToast, copyToClipboard, shareText, setStatusBarColor, exitApp</span></div>
+        </label>
+        <label class="cb-item">
+          <input type="checkbox" id="wvStripWv" checked>
+          <div>Убрать метку «; wv» из User-Agent<span class="cb-sub">Обход блокировок OAuth и веб-сервисов</span></div>
+        </label>
+        <label class="cb-item">
+          <input type="checkbox" id="wvDebug">
+          <div>Удаленная отладка WebView<span class="cb-sub">setWebContentsDebuggingEnabled(true)</span></div>
+        </label>
+        <label class="cb-item">
+          <input type="checkbox" id="wvZoom">
+          <div>Масштабирование пальцами<span class="cb-sub">setSupportZoom / setBuiltInZoomControls</span></div>
+        </label>
+        <label class="cb-item">
+          <input type="checkbox" id="wvMixed" checked>
+          <div>Разрешить Mixed Content<span class="cb-sub">MIXED_CONTENT_ALWAYS_ALLOW</span></div>
+        </label>
+        <label class="cb-item">
+          <input type="checkbox" id="wvExternal" checked>
+          <div>Внешние схемы и target="_blank"<span class="cb-sub">tel:, mailto:, tg:, whatsapp:, market:</span></div>
+        </label>
+        <label class="cb-item">
+          <input type="checkbox" id="wvDownloads" checked>
+          <div>Загрузка файлов и &lt;input type="file"&gt;<span class="cb-sub">DownloadManager + onShowFileChooser</span></div>
+        </label>
+      </div>
+    </div>
+  </details>
+
+  <!-- 4. Intent-фильтры и интеграции -->
+  <details class="acc">
+    <summary>4. Intent-фильтры, Deep Links и интеграции</summary>
+    <div class="acc-body">
+      <div class="grid">
+        <div class="field">
+          <label for="deepScheme">Deep Link: кастомная схема (опционально)</label>
+          <input type="text" id="deepScheme" placeholder="например: myapp">
+        </div>
+        <div class="field">
+          <label for="deepHost">Deep Link: HTTPS-домен (опционально)</label>
+          <input type="text" id="deepHost" placeholder="например: example.com">
+        </div>
+      </div>
+      <div class="checkbox-grid">
+        <label class="cb-item">
+          <input type="checkbox" id="intShare">
+          <div>Меню «Поделиться» (ACTION_SEND)<span class="cb-sub">Передает текст в ?shared=...</span></div>
+        </label>
+        <label class="cb-item">
+          <input type="checkbox" id="intBrowser">
+          <div>Зарегистрировать как браузер<span class="cb-sub">HTTP/HTTPS + CATEGORY_BROWSABLE</span></div>
+        </label>
+        <label class="cb-item">
+          <input type="checkbox" id="intHome">
+          <div>Зарегистрировать как лаунчер<span class="cb-sub">CATEGORY_HOME + CATEGORY_DEFAULT</span></div>
+        </label>
+      </div>
+    </div>
+  </details>
+  <!-- 5. Все разрешения (uses-permission) -->
+  <details class="acc">
+    <summary>
+      <span>5. Разрешения Android (<code style="font-size:0.84rem;color:var(--primary)">uses-permission</code>)</span>
+      <span id="permCounter" style="font-size:0.8rem;color:var(--text-muted);margin-left:auto;margin-right:10px;">Выбрано: 0</span>
+    </summary>
+    <div class="acc-body">
+      <div class="perm-controls">
+        <input type="text" id="permSearch" placeholder="Поиск по названию или константе (CAMERA, BLUETOOTH, LOCATION, STORAGE)...">
+        <button type="button" class="btn btn-sm" id="btnPresetNet">Базовый интернет</button>
+        <button type="button" class="btn btn-sm" id="btnPresetMedia">Медиа / Камера / Гео</button>
+        <button type="button" class="btn btn-sm" id="btnPresetMax">Максимальный</button>
+        <button type="button" class="btn btn-sm" id="btnPresetNone">Снять все</button>
+      </div>
+      <div id="permContainer"></div>
+      <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border);">
+        <label for="customPermInput">Добавить любое кастомное разрешение вручную</label>
+        <div class="input-row" style="margin-top: 6px;">
+          <input type="text" id="customPermInput" placeholder="например: com.vendor.permission.CUSTOM">
+          <button type="button" class="btn" id="btnAddCustomPerm">Добавить</button>
+        </div>
+        <div class="custom-perm-tags" id="customPermTags"></div>
+      </div>
+    </div>
+  </details>
+
+  <!-- 6. Сборка -->
+  <section class="card">
+    <div style="font-size:1rem;font-weight:600;margin-bottom:12px;">6. Сборка APK-шаблона</div>
+    <button type="button" class="btn btn-primary" id="btnBuildApk">Сгенерировать и скачать template.apk</button>
+    <div class="log-box" id="logBox">Готов к сборке. Настройте параметры выше и нажмите «Сгенерировать и скачать template.apk».</div>
+  </section>
+</div>
+<script>
+"use strict";
+
+// ============================================================================
+// УТИЛИТЫ БИНАРНЫХ БУФЕРОВ, КОДИРОВОК И КОНТРОЛЬНЫХ СУММ
+// ============================================================================
+
+class ByteWriter {
+  constructor(initialCapacity = 4096) {
+    this.buf = new Uint8Array(initialCapacity);
+    this.view = new DataView(this.buf.buffer);
+    this.pos = 0;
+  }
+  ensure(extra) {
+    if (this.pos + extra <= this.buf.length) return;
+    let newLen = this.buf.length * 2;
+    while (newLen < this.pos + extra) newLen *= 2;
+    const next = new Uint8Array(newLen);
+    next.set(this.buf.subarray(0, this.pos));
+    this.buf = next;
+    this.view = new DataView(this.buf.buffer);
+  }
+  u8(v) {
+    this.ensure(1);
+    this.buf[this.pos++] = v & 0xff;
+  }
+  u16(v) {
+    this.ensure(2);
+    this.view.setUint16(this.pos, v & 0xffff, true);
+    this.pos += 2;
+  }
+  u32(v) {
+    this.ensure(4);
+    this.view.setUint32(this.pos, v >>> 0, true);
+    this.pos += 4;
+  }
+  i32(v) {
+    this.ensure(4);
+    this.view.setInt32(this.pos, v | 0, true);
+    this.pos += 4;
+  }
+  bytes(arr) {
+    this.ensure(arr.length);
+    this.buf.set(arr, this.pos);
+    this.pos += arr.length;
+  }
+  zeros(count) {
+    if (count <= 0) return;
+    this.ensure(count);
+    this.buf.fill(0, this.pos, this.pos + count);
+    this.pos += count;
+  }
+  align(boundary = 4) {
+    const rem = this.pos % boundary;
+    if (rem !== 0) this.zeros(boundary - rem);
+  }
+  patchU16(offset, v) {
+    this.view.setUint16(offset, v & 0xffff, true);
+  }
+  patchU32(offset, v) {
+    this.view.setUint32(offset, v >>> 0, true);
+  }
+  toUint8Array() {
+    return this.buf.slice(0, this.pos);
+  }
+}
+
+function encodeUTF16LE(str) {
+  const out = new Uint8Array(str.length * 2);
+  const dv = new DataView(out.buffer);
+  for (let i = 0; i < str.length; i++) {
+    dv.setUint16(i * 2, str.charCodeAt(i), true);
+  }
+  return out;
+}
+
+const textEncoder = new TextEncoder();
+function encodeUTF8(str) {
+  return textEncoder.encode(str);
+}
+
+// MUTF-8 кодирование для DEX (строки с длиной в UTF-16 code units + нулевой терминатор)
+function encodeMUTF8WithLen(str) {
+  const bytes = [];
+  let u16Len = str.length;
+  do {
+    let b = u16Len & 0x7f;
+    u16Len >>>= 7;
+    if (u16Len !== 0) b |= 0x80;
+    bytes.push(b);
+  } while (u16Len !== 0);
+
+  for (let i = 0; i < str.length; i++) {
+    const c = str.charCodeAt(i);
+    if (c === 0) {
+      bytes.push(0xc0, 0x80);
+    } else if (c < 0x80) {
+      bytes.push(c);
+    } else if (c < 0x800) {
+      bytes.push(0xc0 | (c >> 6), 0x80 | (c & 0x3f));
+    } else {
+      bytes.push(0xe0 | (c >> 12), 0x80 | ((c >> 6) & 0x3f), 0x80 | (c & 0x3f));
+    }
+  }
+  bytes.push(0);
+  return new Uint8Array(bytes);
+}
+
+function writeULEB128(writer, value) {
+  let v = value >>> 0;
+  do {
+    let b = v & 0x7f;
+    v >>>= 7;
+    if (v !== 0) b |= 0x80;
+    writer.u8(b);
+  } while (v !== 0);
+}
+
+function writeSLEB128(writer, value) {
+  let v = value | 0;
+  let more = true;
+  while (more) {
+    let b = v & 0x7f;
+    v >>= 7;
+    if ((v === 0 && (b & 0x40) === 0) || (v === -1 && (b & 0x40) !== 0)) {
+      more = false;
+    } else {
+      b |= 0x80;
+    }
+    writer.u8(b);
+  }
+}
+
+// Adler-32 для заголовка DEX
+function adler32(data, start = 0) {
+  const MOD = 65521;
+  let a = 1;
+  let b = 0;
+  for (let i = start; i < data.length; i++) {
+    a = (a + data[i]) % MOD;
+    b = (b + a) % MOD;
+  }
+  return ((b << 16) | a) >>> 0;
+}
+
+// SHA-1 через WebCrypto с фолбэком на чистый JS (для file:// без HTTPS)
+async function sha1Bytes(data) {
+  if (typeof crypto !== "undefined" && crypto.subtle && crypto.subtle.digest) {
+    try {
+      const digest = await crypto.subtle.digest(
+        "SHA-1",
+        data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength)
+      );
+      return new Uint8Array(digest);
+    } catch (_) {}
+  }
+  return sha1Fallback(data);
+}
+
+function sha1Fallback(msg) {
+  const ml = msg.length;
+  const totalLen = (((ml + 8) >> 6) + 1) << 6;
+  const buf = new Uint8Array(totalLen);
+  buf.set(msg);
+  buf[ml] = 0x80;
+  const dv = new DataView(buf.buffer);
+  dv.setUint32(totalLen - 8, Math.floor((ml * 8) / 0x100000000), false);
+  dv.setUint32(totalLen - 4, (ml * 8) >>> 0, false);
+
+  let h0 = 0x67452301, h1 = 0xefcdab89, h2 = 0x98badcfe, h3 = 0x10325476, h4 = 0xc3d2e1f0;
+  const w = new Uint32Array(80);
+  const rotl = (n, s) => ((n << s) | (n >>> (32 - s))) >>> 0;
+
+  for (let i = 0; i < totalLen; i += 64) {
+    for (let j = 0; j < 16; j++) w[j] = dv.getUint32(i + j * 4, false);
+    for (let j = 16; j < 80; j++) w[j] = rotl(w[j - 3] ^ w[j - 8] ^ w[j - 14] ^ w[j - 16], 1);
+    let a = h0, b = h1, c = h2, d = h3, e = h4;
+    for (let j = 0; j < 80; j++) {
+      let f, k;
+      if (j < 20) { f = (b & c) | (~b & d); k = 0x5a827999; }
+      else if (j < 40) { f = b ^ c ^ d; k = 0x6ed9eba1; }
+      else if (j < 60) { f = (b & c) | (b & d) | (c & d); k = 0x8f1bbcdc; }
+      else { f = b ^ c ^ d; k = 0xca62c1d6; }
+      const temp = (rotl(a, 5) + f + e + k + w[j]) >>> 0;
+      e = d; d = c; c = rotl(b, 30); b = a; a = temp;
+    }
+    h0 = (h0 + a) >>> 0; h1 = (h1 + b) >>> 0; h2 = (h2 + c) >>> 0; h3 = (h3 + d) >>> 0; h4 = (h4 + e) >>> 0;
+  }
+  const out = new Uint8Array(20);
+  const outDv = new DataView(out.buffer);
+  outDv.setUint32(0, h0, false); outDv.setUint32(4, h1, false); outDv.setUint32(8, h2, false);
+  outDv.setUint32(12, h3, false); outDv.setUint32(16, h4, false);
+  return out;
+}
+
+// CRC-32 для ZIP-архива
+const CRC32_TABLE = (() => {
+  const t = new Uint32Array(256);
+  for (let i = 0; i < 256; i++) {
+    let c = i;
+    for (let k = 0; k < 8; k++) c = (c & 1) ? (0xedb88320 ^ (c >>> 1)) : (c >>> 1);
+    t[i] = c >>> 0;
+  }
+  return t;
+})();
+
+function crc32(data) {
+  let c = 0xffffffff;
+  for (let i = 0; i < data.length; i++) {
+    c = CRC32_TABLE[(c ^ data[i]) & 0xff] ^ (c >>> 8);
+  }
+  return (c ^ 0xffffffff) >>> 0;
+}
+
+// Генерация PNG-иконки 192x192 через <canvas>
+async function generateIconPng(appName) {
+  const canvas = document.createElement("canvas");
+  canvas.width = 192;
+  canvas.height = 192;
+  const ctx = canvas.getContext("2d");
+
+  const grad = ctx.createLinearGradient(0, 0, 192, 192);
+  grad.addColorStop(0, "#2563eb");
+  grad.addColorStop(1, "#10b981");
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.roundRect(12, 12, 168, 168, 36);
+  ctx.fill();
+
+  ctx.fillStyle = "rgba(255,255,255,0.16)";
+  ctx.beginPath();
+  ctx.arc(140, 52, 48, 0, Math.PI * 2);
+  ctx.fill();
+
+  const letter = (appName || "A").trim().charAt(0).toUpperCase() || "A";
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "bold 88px sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(letter, 96, 102);
+
+  return new Promise((resolve) => {
+    canvas.toBlob((blob) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(new Uint8Array(reader.result));
+      reader.readAsArrayBuffer(blob);
+    }, "image/png");
+  });
+}
+// ============================================================================
+// ГЕНЕРАТОР STRING POOL (UTF-16LE) ДЛЯ AXML И ARSC
+// ============================================================================
+
+function buildStringPoolUTF16(strings) {
+  const count = strings.length;
+  const headerSize = 28;
+  const offsetsSize = count * 4;
+  const stringsStart = headerSize + offsetsSize;
+
+  const strBody = new ByteWriter(count * 32 + 64);
+  const offsets = new Uint32Array(count);
+
+  for (let i = 0; i < count; i++) {
+    offsets[i] = strBody.pos;
+    const s = strings[i];
+    const len = s.length;
+    if (len > 0x7fff) {
+      strBody.u16(0x8000 | ((len >>> 16) & 0x7fff));
+      strBody.u16(len & 0xffff);
+    } else {
+      strBody.u16(len);
+    }
+    strBody.bytes(encodeUTF16LE(s));
+    strBody.u16(0); // UTF-16LE null-terminator
+  }
+  strBody.align(4);
+
+  const strBytes = strBody.toUint8Array();
+  const totalSize = stringsStart + strBytes.length;
+
+  const w = new ByteWriter(totalSize);
+  w.u16(0x0001);       // RES_STRING_POOL_TYPE
+  w.u16(headerSize);   // headerSize
+  w.u32(totalSize);    // chunkSize
+  w.u32(count);        // stringCount
+  w.u32(0);            // styleCount
+  w.u32(0);            // flags (0 = UTF-16)
+  w.u32(stringsStart); // stringsStart
+  w.u32(0);            // stylesStart
+  for (let i = 0; i < count; i++) {
+    w.u32(offsets[i]);
+  }
+  w.bytes(strBytes);
+  return w.toUint8Array();
+}
+
+// ============================================================================
+// ГЕНЕРАТОР RESOURCES.ARSC (ТАБЛИЦА РЕСУРСОВ ANDROID)
+// ============================================================================
+
+function buildResourcesArsc(packageName, appName) {
+  // Глобальный пул строк: = appName, = путь к иконке
+  const globalPool = buildStringPoolUTF16([
+    appName || "WebApp Shell",
+    "res/mipmap-xxxhdpi/ic_launcher.png"
+  ]);
+
+  // Пул имён типов ресурсов (typeStrings): = "string", = "mipmap"
+  const typeStringsPool = buildStringPoolUTF16(["string", "mipmap"]);
+
+  // Пул имён ключей ресурсов (keyStrings): = "app_name", = "ic_launcher"
+  const keyStringsPool = buildStringPoolUTF16(["app_name", "ic_launcher"]);
+
+  // Вспомогательная сборка RES_TABLE_TYPE_SPEC_TYPE (0x0202)
+  function buildTypeSpec(typeId, entryCount) {
+    const headerSize = 16;
+    const chunkSize = headerSize + entryCount * 4;
+    const w = new ByteWriter(chunkSize);
+    w.u16(0x0202);     // RES_TABLE_TYPE_SPEC_TYPE
+    w.u16(headerSize); // headerSize
+    w.u32(chunkSize);  // chunkSize
+    w.u8(typeId);      // id (1-based)
+    w.u8(0);           // res0
+    w.u16(0);          // res1
+    w.u32(entryCount); // entryCount
+    for (let i = 0; i < entryCount; i++) {
+      w.u32(0); // spec flags
+    }
+    return w.toUint8Array();
+  }
+
+  // Вспомогательная сборка RES_TABLE_TYPE_TYPE (0x0201) с одной записью
+  function buildTypeChunk(typeId, keyIndex, globalStringIndex) {
+    const headerSize = 84; // ResTable_type header (с полным ResTable_config 64 байта)
+    const offsetsSize = 4; // 1 entry
+    const entriesStart = headerSize + offsetsSize;
+    const entrySize = 16;  // ResTable_entry (8 байт) + Res_value (8 байт)
+    const chunkSize = entriesStart + entrySize;
+
+    const w = new ByteWriter(chunkSize);
+    w.u16(0x0201);       // RES_TABLE_TYPE_TYPE
+    w.u16(headerSize);   // headerSize
+    w.u32(chunkSize);    // chunkSize
+    w.u8(typeId);        // id
+    w.u8(0);             // res0
+    w.u16(0);            // res1
+    w.u32(1);            // entryCount
+    w.u32(entriesStart); // entriesStart
+    // ResTable_config (64 байта: size = 64, остальные поля = 0)
+    w.u32(64);
+    w.zeros(60);
+
+    // Массив смещений записей (entry 0 -> offset 0)
+    w.u32(0);
+
+    // ResTable_entry
+    w.u16(8);            // size = 8
+    w.u16(0);            // flags = 0
+    w.u32(keyIndex);     // key (индекс в keyStringsPool)
+
+    // Res_value (TYPE_STRING = 0x03)
+    w.u16(8);            // size = 8
+    w.u8(0);             // res0
+    w.u8(0x03);          // dataType = TYPE_STRING
+    w.u32(globalStringIndex); // индекс в globalPool
+
+    return w.toUint8Array();
+  }
+
+  // Type 1: string (@string/app_name -> 0x7f010000)
+  const typeSpec1 = buildTypeSpec(1, 1);
+  const typeChunk1 = buildTypeChunk(1, 0, 0);
+
+  // Type 2: mipmap (@mipmap/ic_launcher -> 0x7f020000)
+  const typeSpec2 = buildTypeSpec(2, 1);
+  const typeChunk2 = buildTypeChunk(2, 1, 1);
+
+  // RES_TABLE_PACKAGE_TYPE (0x0200), headerSize = 288 байт
+  const pkgHeaderSize = 288;
+  const typeStringsOffset = pkgHeaderSize;
+  const keyStringsOffset = typeStringsOffset + typeStringsPool.length;
+  const bodyOffset = keyStringsOffset + keyStringsPool.length;
+  const bodyLen = typeSpec1.length + typeChunk1.length + typeSpec2.length + typeChunk2.length;
+  const pkgChunkSize = bodyOffset + bodyLen;
+
+  const pkgWriter = new ByteWriter(pkgChunkSize);
+  pkgWriter.u16(0x0200);          // RES_TABLE_PACKAGE_TYPE
+  pkgWriter.u16(pkgHeaderSize);   // headerSize (288)
+  pkgWriter.u32(pkgChunkSize);    // chunkSize
+  pkgWriter.u32(0x0000007f);      // package id = 0x7f (app package)
+
+  // По смещению +12 байт записываем новое имя пакета в UTF-16LE (ровно 256 байт = 128 символов)
+  const pkgNameBytes = encodeUTF16LE(packageName.slice(0, 127));
+  pkgWriter.bytes(pkgNameBytes);
+  pkgWriter.zeros(256 - pkgNameBytes.length);
+
+  pkgWriter.u32(typeStringsOffset); // typeStrings
+  pkgWriter.u32(2);                 // lastPublicType
+  pkgWriter.u32(keyStringsOffset);  // keyStrings
+  pkgWriter.u32(2);                 // lastPublicKey
+  pkgWriter.u32(0);                 // typeIdOffset
+
+  pkgWriter.bytes(typeStringsPool);
+  pkgWriter.bytes(keyStringsPool);
+  pkgWriter.bytes(typeSpec1);
+  pkgWriter.bytes(typeChunk1);
+  pkgWriter.bytes(typeSpec2);
+  pkgWriter.bytes(typeChunk2);
+
+  const pkgBytes = pkgWriter.toUint8Array();
+
+  // Корневой RES_TABLE_TYPE (0x0002), headerSize = 12 байт
+  const tableHeaderSize = 12;
+  const tableTotalSize = tableHeaderSize + globalPool.length + pkgBytes.length;
+  const tableWriter = new ByteWriter(tableTotalSize);
+  tableWriter.u16(0x0002);          // RES_TABLE_TYPE
+  tableWriter.u16(tableHeaderSize); // headerSize
+  tableWriter.u32(tableTotalSize);  // chunkSize
+  tableWriter.u32(1);               // packageCount = 1
+  tableWriter.bytes(globalPool);
+  tableWriter.bytes(pkgBytes);
+
+  return tableWriter.toUint8Array();
+}
+// ============================================================================
+// ГЕНЕРАТОР БИНАРНОГО ANDROIDMANIFEST.XML (AXML 0x00080003)
+// ============================================================================
+
+const ANDROID_ATTR_IDS = {
+  theme: 0x01010000,
+  label: 0x01010001,
+  icon: 0x01010002,
+  name: 0x01010003,
+  exported: 0x01010010,
+  screenOrientation: 0x0101001e,
+  configChanges: 0x0101001f,
+  value: 0x01010024,
+  mimeType: 0x01010026,
+  scheme: 0x01010027,
+  host: 0x01010028,
+  minSdkVersion: 0x0101020c,
+  versionCode: 0x0101021b,
+  versionName: 0x0101021c,
+  windowSoftInputMode: 0x0101022b,
+  targetSdkVersion: 0x01010270,
+  allowBackup: 0x01010280,
+  hardwareAccelerated: 0x010102d3,
+  usesCleartextTraffic: 0x010104ec
+};
+
+const ORIENTATION_MAP = {
+  unspecified: -1,
+  landscape: 0,
+  portrait: 1,
+  sensorLandscape: 6,
+  sensorPortrait: 7
+};
+
+const SOFT_INPUT_MAP = {
+  adjustResize: 0x10,
+  adjustPan: 0x20
+};
+
+function buildBinaryManifest(cfg) {
+  const strings = [];
+  const strMap = new Map();
+  const intern = (s) => {
+    if (strMap.has(s)) return strMap.get(s);
+    const idx = strings.length;
+    strings.push(s);
+    strMap.set(s, idx);
+    return idx;
+  };
+
+  // Первые N индексов в StringPool должны строго соответствовать RES_XML_RESOURCE_MAP_TYPE
+  const attrNamesOrdered = Object.keys(ANDROID_ATTR_IDS).sort(
+    (a, b) => ANDROID_ATTR_IDS[a] - ANDROID_ATTR_IDS[b]
+  );
+  const resIds = attrNamesOrdered.map((k) => {
+    intern(k);
+    return ANDROID_ATTR_IDS[k];
+  });
+
+  const NS_PREFIX = "android";
+  const NS_URI = "http://android.com";
+  const idxNsPrefix = intern(NS_PREFIX);
+  const idxNsUri = intern(NS_URI);
+
+  const idxManifest = intern("manifest");
+  const idxUsesSdk = intern("uses-sdk");
+  const idxUsesPerm = intern("uses-permission");
+  const idxQueries = intern("queries");
+  const idxIntent = intern("intent");
+  const idxData = intern("data");
+  const idxApp = intern("application");
+  const idxActivity = intern("activity");
+  const idxIntentFilter = intern("intent-filter");
+  const idxAction = intern("action");
+  const idxCategory = intern("category");
+  const idxMetaData = intern("meta-data");
+
+  // Список <meta-data> для передачи всех параметров в MainActivity
+  const metaItems = [
+    { name: "shell.view_mode", value: cfg.viewMode },
+    { name: "shell.start_url", value: cfg.startUrl },
+    { name: "shell.user_agent", value: cfg.customUa },
+    { name: "shell.cache_mode", value: String(cfg.cacheMode) },
+    { name: "shell.wv_bridge", value: cfg.wvBridge ? "1" : "0" },
+    { name: "shell.wv_strip_wv", value: cfg.wvStripWv ? "1" : "0" },
+    { name: "shell.wv_debug", value: cfg.wvDebug ? "1" : "0" },
+    { name: "shell.wv_zoom", value: cfg.wvZoom ? "1" : "0" },
+    { name: "shell.wv_mixed", value: cfg.wvMixed ? "1" : "0" },
+    { name: "shell.wv_external", value: cfg.wvExternal ? "1" : "0" },
+    { name: "shell.wv_downloads", value: cfg.wvDownloads ? "1" : "0" },
+    { name: "shell.fullscreen", value: cfg.fullscreen ? "1" : "0" },
+    { name: "shell.immersive", value: cfg.immersive ? "1" : "0" },
+    { name: "shell.cutout", value: cfg.cutout ? "1" : "0" },
+    { name: "shell.keep_screen", value: cfg.keepScreen ? "1" : "0" },
+    { name: "shell.secure", value: cfg.secure ? "1" : "0" },
+    { name: "shell.status_color", value: cfg.statusBarColor },
+    { name: "shell.nav_color", value: cfg.navBarColor }
+  ];
+
+  const body = new ByteWriter(12288);
+  let lineNum = 1;
+
+  function writeStartNamespace() {
+    body.u16(0x0100); // RES_XML_START_NAMESPACE_TYPE
+    body.u16(16);
+    body.u32(24);
+    body.u32(lineNum++);
+    body.u32(0xffffffff);
+    body.u32(idxNsPrefix);
+    body.u32(idxNsUri);
+  }
+
+  function writeEndNamespace() {
+    body.u16(0x0101); // RES_XML_END_NAMESPACE_TYPE
+    body.u16(16);
+    body.u32(24);
+    body.u32(lineNum++);
+    body.u32(0xffffffff);
+    body.u32(idxNsPrefix);
+    body.u32(idxNsUri);
+  }
+
+  function writeStartTag(tagNameIdx, attrs) {
+    // Сортировка: сначала системные android:* по возрастанию Resource ID, затем без неймспейса
+    const sorted = attrs.slice().sort((a, b) => {
+      if (a.ns !== b.ns) return a.ns ? -1 : 1;
+      if (a.ns && b.ns) return ANDROID_ATTR_IDS[a.name] - ANDROID_ATTR_IDS[b.name];
+      return a.name.localeCompare(b.name);
+    });
+
+    const attrCount = sorted.length;
+    const chunkSize = 36 + attrCount * 20;
+    body.u16(0x0102); // RES_XML_START_TAG_TYPE
+    body.u16(16);
+    body.u32(chunkSize);
+    body.u32(lineNum++);
+    body.u32(0xffffffff); // comment
+    body.u32(0xffffffff); // ns
+    body.u32(tagNameIdx);
+    body.u16(20); // attributeStart
+    body.u16(20); // attributeSize
+    body.u16(attrCount);
+    body.u16(0);  // idIndex
+    body.u16(0);  // classIndex
+    body.u16(0);  // styleIndex
+
+    for (const a of sorted) {
+      const nameIdx = intern(a.name);
+      let rawValIdx = 0xffffffff;
+      let dataVal = a.data >>> 0;
+      if (a.type === 0x03) { // TYPE_STRING
+        const sIdx = intern(a.rawStr);
+        rawValIdx = sIdx;
+        dataVal = sIdx;
+      }
+      body.u32(a.ns ? idxNsUri : 0xffffffff);
+      body.u32(nameIdx);
+      body.u32(rawValIdx);
+      body.u16(8); // Res_value size
+      body.u8(0);  // res0
+      body.u8(a.type);
+      body.u32(dataVal);
+    }
+  }
+
+  function writeEndTag(tagNameIdx) {
+    body.u16(0x0103); // RES_XML_END_TAG_TYPE
+    body.u16(16);
+    body.u32(24);
+    body.u32(lineNum++);
+    body.u32(0xffffffff);
+    body.u32(0xffffffff);
+    body.u32(tagNameIdx);
+  }
+  writeStartNamespace();
+
+  // <manifest>
+  writeStartTag(idxManifest, [
+    { ns: false, name: "package", type: 0x03, rawStr: cfg.packageName },
+    { ns: true, name: "versionCode", type: 0x10, data: cfg.versionCode },
+    { ns: true, name: "versionName", type: 0x03, rawStr: cfg.versionName }
+  ]);
+
+  // <uses-sdk>
+  writeStartTag(idxUsesSdk, [
+    { ns: true, name: "minSdkVersion", type: 0x10, data: cfg.minSdk },
+    { ns: true, name: "targetSdkVersion", type: 0x10, data: cfg.targetSdk }
+  ]);
+  writeEndTag(idxUsesSdk);
+
+  // <uses-permission>
+  for (const perm of cfg.permissions) {
+    writeStartTag(idxUsesPerm, [
+      { ns: true, name: "name", type: 0x03, rawStr: perm }
+    ]);
+    writeEndTag(idxUsesPerm);
+  }
+
+  // <queries> для Android 11+ (внешние схемы и Chooser)
+  writeStartTag(idxQueries, []);
+  for (const sch of ["https", "http", "tel", "mailto", "tg", "whatsapp", "market"]) {
+    writeStartTag(idxIntent, []);
+    writeStartTag(idxAction, [{ ns: true, name: "name", type: 0x03, rawStr: "android.intent.action.VIEW" }]);
+    writeEndTag(idxAction);
+    writeStartTag(idxData, [{ ns: true, name: "scheme", type: 0x03, rawStr: sch }]);
+    writeEndTag(idxData);
+    writeEndTag(idxIntent);
+  }
+  writeEndTag(idxQueries);
+
+  // <application> (Theme.DeviceDefault.NoActionBar = 0x0103012a, Theme.DeviceDefault = 0x01030128)
+  const themeResId = cfg.theme === "actionbar" ? 0x01030128 : 0x0103012a;
+  writeStartTag(idxApp, [
+    { ns: true, name: "label", type: 0x01, data: 0x7f010000 }, // @string/app_name
+    { ns: true, name: "icon", type: 0x01, data: 0x7f020000 },  // @mipmap/ic_launcher
+    { ns: true, name: "theme", type: 0x01, data: themeResId },
+    { ns: true, name: "allowBackup", type: 0x12, data: cfg.allowBackup ? 0xffffffff : 0 },
+    { ns: true, name: "hardwareAccelerated", type: 0x12, data: cfg.hwAccel ? 0xffffffff : 0 },
+    { ns: true, name: "usesCleartextTraffic", type: 0x12, data: cfg.cleartext ? 0xffffffff : 0 }
+  ]);
+
+  // <activity android:name="a.b.MainActivity" ...>
+  // configChanges: orientation(0x80) | screenSize(0x400) | screenLayout(0x100) | keyboardHidden(0x20) = 0x5A0
+  const orientVal = ORIENTATION_MAP[cfg.orientation] !== undefined ? ORIENTATION_MAP[cfg.orientation] : -1;
+  const softVal = SOFT_INPUT_MAP[cfg.softInput] || 0x10;
+  writeStartTag(idxActivity, [
+    { ns: true, name: "name", type: 0x03, rawStr: "a.b.MainActivity" },
+    { ns: true, name: "exported", type: 0x12, data: 0xffffffff },
+    { ns: true, name: "screenOrientation", type: 0x10, data: orientVal },
+    { ns: true, name: "configChanges", type: 0x10, data: 0x05a0 },
+    { ns: true, name: "windowSoftInputMode", type: 0x10, data: softVal }
+  ]);
+
+  // 1. Основной LAUNCHER intent-filter (+ опциональный HOME для режима лаунчера)
+  writeStartTag(idxIntentFilter, []);
+  writeStartTag(idxAction, [{ ns: true, name: "name", type: 0x03, rawStr: "android.intent.action.MAIN" }]);
+  writeEndTag(idxAction);
+  writeStartTag(idxCategory, [{ ns: true, name: "name", type: 0x03, rawStr: "android.intent.category.LAUNCHER" }]);
+  writeEndTag(idxCategory);
+  if (cfg.intHome) {
+    writeStartTag(idxCategory, [{ ns: true, name: "name", type: 0x03, rawStr: "android.intent.category.HOME" }]);
+    writeEndTag(idxCategory);
+    writeStartTag(idxCategory, [{ ns: true, name: "name", type: 0x03, rawStr: "android.intent.category.DEFAULT" }]);
+    writeEndTag(idxCategory);
+  }
+  writeEndTag(idxIntentFilter);
+
+  // 2. Deep Link: кастомная схема (например myapp://...)
+  if (cfg.deepScheme) {
+    writeStartTag(idxIntentFilter, []);
+    writeStartTag(idxAction, [{ ns: true, name: "name", type: 0x03, rawStr: "android.intent.action.VIEW" }]);
+    writeEndTag(idxAction);
+    writeStartTag(idxCategory, [{ ns: true, name: "name", type: 0x03, rawStr: "android.intent.category.DEFAULT" }]);
+    writeEndTag(idxCategory);
+    writeStartTag(idxCategory, [{ ns: true, name: "name", type: 0x03, rawStr: "android.intent.category.BROWSABLE" }]);
+    writeEndTag(idxCategory);
+    writeStartTag(idxData, [{ ns: true, name: "scheme", type: 0x03, rawStr: cfg.deepScheme }]);
+    writeEndTag(idxData);
+    writeEndTag(idxIntentFilter);
+  }
+
+  // 3. Deep Link: HTTPS-домен (например https://example.com)
+  if (cfg.deepHost) {
+    writeStartTag(idxIntentFilter, []);
+    writeStartTag(idxAction, [{ ns: true, name: "name", type: 0x03, rawStr: "android.intent.action.VIEW" }]);
+    writeEndTag(idxAction);
+    writeStartTag(idxCategory, [{ ns: true, name: "name", type: 0x03, rawStr: "android.intent.category.DEFAULT" }]);
+    writeEndTag(idxCategory);
+    writeStartTag(idxCategory, [{ ns: true, name: "name", type: 0x03, rawStr: "android.intent.category.BROWSABLE" }]);
+    writeEndTag(idxCategory);
+    writeStartTag(idxData, [
+      { ns: true, name: "scheme", type: 0x03, rawStr: "https" },
+      { ns: true, name: "host", type: 0x03, rawStr: cfg.deepHost }
+    ]);
+    writeEndTag(idxData);
+    writeEndTag(idxIntentFilter);
+  }
+
+  // 4. Меню «Поделиться» (ACTION_SEND text/plain)
+  if (cfg.intShare) {
+    writeStartTag(idxIntentFilter, []);
+    writeStartTag(idxAction, [{ ns: true, name: "name", type: 0x03, rawStr: "android.intent.action.SEND" }]);
+    writeEndTag(idxAction);
+    writeStartTag(idxCategory, [{ ns: true, name: "name", type: 0x03, rawStr: "android.intent.category.DEFAULT" }]);
+    writeEndTag(idxCategory);
+    writeStartTag(idxData, [{ ns: true, name: "mimeType", type: 0x03, rawStr: "text/plain" }]);
+    writeEndTag(idxData);
+    writeEndTag(idxIntentFilter);
+  }
+
+  // 5. Режим браузера (HTTP / HTTPS + BROWSABLE)
+  if (cfg.intBrowser) {
+    writeStartTag(idxIntentFilter, []);
+    writeStartTag(idxAction, [{ ns: true, name: "name", type: 0x03, rawStr: "android.intent.action.VIEW" }]);
+    writeEndTag(idxAction);
+    writeStartTag(idxCategory, [{ ns: true, name: "name", type: 0x03, rawStr: "android.intent.category.DEFAULT" }]);
+    writeEndTag(idxCategory);
+    writeStartTag(idxCategory, [{ ns: true, name: "name", type: 0x03, rawStr: "android.intent.category.BROWSABLE" }]);
+    writeEndTag(idxCategory);
+    writeStartTag(idxData, [{ ns: true, name: "scheme", type: 0x03, rawStr: "http" }]);
+    writeEndTag(idxData);
+    writeStartTag(idxData, [{ ns: true, name: "scheme", type: 0x03, rawStr: "https" }]);
+    writeEndTag(idxData);
+    writeEndTag(idxIntentFilter);
+  }
+
+  writeEndTag(idxActivity);
+
+  // <meta-data> внутри <application>
+  for (const m of metaItems) {
+    writeStartTag(idxMetaData, [
+      { ns: true, name: "name", type: 0x03, rawStr: m.name },
+      { ns: true, name: "value", type: 0x03, rawStr: m.value }
+    ]);
+    writeEndTag(idxMetaData);
+  }
+
+  writeEndTag(idxApp);
+  writeEndTag(idxManifest);
+  writeEndNamespace();
+
+  // Собираем AXML: Header + StringPool + ResourceMap + Body
+  const stringPoolChunk = buildStringPoolUTF16(strings);
+  const resMapSize = 8 + resIds.length * 4;
+  const resMapWriter = new ByteWriter(resMapSize);
+  resMapWriter.u16(0x0180);     // RES_XML_RESOURCE_MAP_TYPE
+  resMapWriter.u16(8);
+  resMapWriter.u32(resMapSize);
+  for (const id of resIds) resMapWriter.u32(id);
+  const resMapChunk = resMapWriter.toUint8Array();
+
+  const bodyBytes = body.toUint8Array();
+  const totalFileSize = 8 + stringPoolChunk.length + resMapChunk.length + bodyBytes.length;
+
+  const xmlWriter = new ByteWriter(totalFileSize);
+  xmlWriter.u32(0x00080003);    // RES_XML_TYPE + headerSize (8)
+  xmlWriter.u32(totalFileSize); // fileSize
+  xmlWriter.bytes(stringPoolChunk);
+  xmlWriter.bytes(resMapChunk);
+  xmlWriter.bytes(bodyBytes);
+
+  return xmlWriter.toUint8Array();
+}
+// ============================================================================
+// ГЕНЕРАТОР CLASSES.DEX (СРЕДА DALVIK BYTECODE 035 + @JavascriptInterface)
+// ============================================================================
+
+class DexBuilder {
+  constructor() {
+    this.strings = new Set();
+    this.types = new Set();
+    this.protos = new Map();
+    this.fields = new Map();
+    this.methods = new Map();
+  }
+
+  addString(s) {
+    this.strings.add(s);
+    return s;
+  }
+
+  addType(desc) {
+    this.addString(desc);
+    this.types.add(desc);
+    return desc;
+  }
+
+  static typeToShorty(desc) {
+    if (desc.startsWith("L") || desc.startsWith("[")) return "L";
+    return desc;
+  }
+
+  addProto(retDesc, paramDescs = []) {
+    this.addType(retDesc);
+    let shorty = DexBuilder.typeToShorty(retDesc);
+    for (const p of paramDescs) {
+      this.addType(p);
+      shorty += DexBuilder.typeToShorty(p);
+    }
+    this.addString(shorty);
+    const key = `${retDesc}(${paramDescs.join("")})`;
+    if (!this.protos.has(key)) {
+      this.protos.set(key, { key, ret: retDesc, params: paramDescs.slice(), shorty });
+    }
+    return key;
+  }
+
+  addField(clsDesc, typeDesc, name) {
+    this.addType(clsDesc);
+    this.addType(typeDesc);
+    this.addString(name);
+    const key = `${clsDesc}->${name}:${typeDesc}`;
+    if (!this.fields.has(key)) {
+      this.fields.set(key, { key, cls: clsDesc, type: typeDesc, name });
+    }
+    return key;
+  }
+
+  addMethod(clsDesc, name, retDesc, paramDescs = []) {
+    this.addType(clsDesc);
+    this.addString(name);
+    const protoKey = this.addProto(retDesc, paramDescs);
+    const key = `${clsDesc}->${name}:${protoKey}`;
+    if (!this.methods.has(key)) {
+      this.methods.set(key, { key, cls: clsDesc, protoKey, name });
+    }
+    return key;
+  }
+}
+
+class CodeEmitter {
+  constructor(registersSize, insSize, outsSize) {
+    this.registersSize = registersSize;
+    this.insSize = insSize;
+    this.outsSize = outsSize;
+    this.words = [];
+    this.labels = new Map();
+    this.fixups = [];
+    this.tries = []; // { startLabel, endLabel, catchAllLabel }
+  }
+  get pc() { return this.words.length; }
+  label(name) { this.labels.set(name, this.pc); }
+  emit16(w) { this.words.push(w & 0xffff); }
+  emit32(v) { this.words.push(v & 0xffff, (v >>> 16) & 0xffff); }
+
+  addTryCatchAll(startLabel, endLabel, catchAllLabel) {
+    this.tries.push({ startLabel, endLabel, catchAllLabel });
+  }
+
+  nop() { this.emit16(0x0000); }
+  move(dst, src) { this.emit16(0x01 | (dst << 8) | (src << 12)); }
+  moveObject(dst, src) { this.emit16(0x07 | (dst << 8) | (src << 12)); }
+  moveObjectFrom16(dst, src) { this.emit16(0x08 | (dst << 8)); this.emit16(src); }
+  moveResult(dst) { this.emit16(0x0a | (dst << 8)); }
+  moveResultObject(dst) { this.emit16(0x0c | (dst << 8)); }
+  moveException(dst) { this.emit16(0x0d | (dst << 8)); }
+  returnVoid() { this.emit16(0x0e); }
+  returnVal(reg) { this.emit16(0x0f | (reg << 8)); }
+  returnObject(reg) { this.emit16(0x11 | (reg << 8)); }
+  const4(dst, val) { this.emit16(0x12 | (dst << 8) | ((val & 0xf) << 12)); }
+  const16(dst, val) { this.emit16(0x13 | (dst << 8)); this.emit16(val & 0xffff); }
+  const32(dst, val) { this.emit16(0x14 | (dst << 8)); this.emit32(val); }
+  constString(dst, strIdx) { this.emit16(0x1a | (dst << 8)); this.emit16(strIdx); }
+  checkCast(reg, typeIdx) { this.emit16(0x1f | (reg << 8)); this.emit16(typeIdx); }
+  newInstance(dst, typeIdx) { this.emit16(0x22 | (dst << 8)); this.emit16(typeIdx); }
+  newArray(dst, lenReg, typeIdx) { this.emit16(0x23 | (dst << 8) | (lenReg << 12)); this.emit16(typeIdx); }
+  agetObject(dst, arrReg, idxReg) { this.emit16(0x46 | (dst << 8)); this.emit16(arrReg | (idxReg << 8)); }
+  aputObject(valReg, arrReg, idxReg) { this.emit16(0x4d | (valReg << 8)); this.emit16(arrReg | (idxReg << 8)); }
+  igetObject(dst, objReg, fieldIdx) { this.emit16(0x54 | (dst << 8) | (objReg << 12)); this.emit16(fieldIdx); }
+  igetBoolean(dst, objReg, fieldIdx) { this.emit16(0x55 | (dst << 8) | (objReg << 12)); this.emit16(fieldIdx); }
+  iputObject(src, objReg, fieldIdx) { this.emit16(0x5b | (src << 8) | (objReg << 12)); this.emit16(fieldIdx); }
+  iputBoolean(src, objReg, fieldIdx) { this.emit16(0x5c | (src << 8) | (objReg << 12)); this.emit16(fieldIdx); }
+  sgetObject(dst, fieldIdx) { this.emit16(0x62 | (dst << 8)); this.emit16(fieldIdx); }
+  intToLong(dst, src) { this.emit16(0x81 | (dst << 8) | (src << 12)); }
+
+  goto16(labelName) {
+    const pos = this.pc;
+    this.emit16(0x29);
+    this.emit16(0);
+    this.fixups.push({ pos, target: labelName });
+  }
+  ifEq(rA, rB, labelName) {
+    const pos = this.pc;
+    this.emit16(0x32 | (rA << 8) | (rB << 12));
+    this.emit16(0);
+    this.fixups.push({ pos, target: labelName });
+  }
+  ifNe(rA, rB, labelName) {
+    const pos = this.pc;
+    this.emit16(0x33 | (rA << 8) | (rB << 12));
+    this.emit16(0);
+    this.fixups.push({ pos, target: labelName });
+  }
+  ifGe(rA, rB, labelName) {
+    const pos = this.pc;
+    this.emit16(0x35 | (rA << 8) | (rB << 12));
+    this.emit16(0);
+    this.fixups.push({ pos, target: labelName });
+  }
+  ifEqz(reg, labelName) {
+    const pos = this.pc;
+    this.emit16(0x38 | (reg << 8));
+    this.emit16(0);
+    this.fixups.push({ pos, target: labelName });
+  }
+  ifNez(reg, labelName) {
+    const pos = this.pc;
+    this.emit16(0x39 | (reg << 8));
+    this.emit16(0);
+    this.fixups.push({ pos, target: labelName });
+  }
+
+  _invoke(op, methodIdx, regs) {
+    const count = regs.length;
+    const r0 = regs[0] || 0, r1 = regs[1] || 0, r2 = regs[2] || 0, r3 = regs[3] || 0, r4 = regs[4] || 0;
+    this.emit16(op | (r4 << 8) | (count << 12));
+    this.emit16(methodIdx);
+    this.emit16(r0 | (r1 << 4) | (r2 << 8) | (r3 << 12));
+  }
+  invokeVirtual(methodIdx, ...regs) { this._invoke(0x6e, methodIdx, regs); }
+  invokeSuper(methodIdx, ...regs)   { this._invoke(0x6f, methodIdx, regs); }
+  invokeDirect(methodIdx, ...regs)  { this._invoke(0x70, methodIdx, regs); }
+  invokeStatic(methodIdx, ...regs)  { this._invoke(0x71, methodIdx, regs); }
+  invokeInterface(methodIdx, ...regs) { this._invoke(0x72, methodIdx, regs); }
+
+  finalize() {
+    for (const f of this.fixups) {
+      const targetPc = this.labels.get(f.target);
+      if (targetPc === undefined) throw new Error("Неизвестная метка Dalvik: " + f.target);
+      this.words[f.pos + 1] = (targetPc - f.pos) & 0xffff;
+    }
+    return new Uint16Array(this.words);
+  }
+}
+async function buildClassesDex() {
+  const b = new DexBuilder();
+
+  // Классы приложения и Android SDK
+  const T_MAIN   = b.addType("La/b/MainActivity;");
+  const T_WVC    = b.addType("La/b/MyWebViewClient;");
+  const T_WCC    = b.addType("La/b/MyChromeClient;");
+  const T_DL     = b.addType("La/b/MyDownloadListener;");
+  const T_BRIDGE = b.addType("La/b/JsBridge;");
+  const T_JS_ANN = b.addType("Landroid/webkit/JavascriptInterface;");
+
+  const T_ACT      = b.addType("Landroid/app/Activity;");
+  const T_OBJ      = b.addType("Ljava/lang/Object;");
+  const T_STR      = b.addType("Ljava/lang/String;");
+  const T_SB       = b.addType("Ljava/lang/StringBuilder;");
+  const T_THROW    = b.addType("Ljava/lang/Throwable;");
+  const T_ARR_STR  = b.addType("[Ljava/lang/String;");
+  const T_ARR_URI  = b.addType("[Landroid/net/Uri;");
+  const T_BUNDLE   = b.addType("Landroid/os/Bundle;");
+  const T_PM       = b.addType("Landroid/content/pm/PackageManager;");
+  const T_AI       = b.addType("Landroid/content/pm/ApplicationInfo;");
+  const T_URI      = b.addType("Landroid/net/Uri;");
+  const T_INTENT   = b.addType("Landroid/content/Intent;");
+  const T_WIN      = b.addType("Landroid/view/Window;");
+  const T_WLP      = b.addType("Landroid/view/WindowManager$LayoutParams;");
+  const T_VIEW     = b.addType("Landroid/view/View;");
+  const T_WV       = b.addType("Landroid/webkit/WebView;");
+  const T_WS       = b.addType("Landroid/webkit/WebSettings;");
+  const T_WVC_BASE = b.addType("Landroid/webkit/WebViewClient;");
+  const T_WCC_BASE = b.addType("Landroid/webkit/WebChromeClient;");
+  const T_WCC_FCP  = b.addType("Landroid/webkit/WebChromeClient$FileChooserParams;");
+  const T_VCB      = b.addType("Landroid/webkit/ValueCallback;");
+  const T_DL_IFACE = b.addType("Landroid/webkit/DownloadListener;");
+  const T_WWR      = b.addType("Landroid/webkit/WebResourceRequest;");
+  const T_GEO_CB   = b.addType("Landroid/webkit/GeolocationPermissions$Callback;");
+  const T_PERM_REQ = b.addType("Landroid/webkit/PermissionRequest;");
+  const T_URL_UTIL = b.addType("Landroid/webkit/URLUtil;");
+  const T_COLOR    = b.addType("Landroid/graphics/Color;");
+  const T_INT      = b.addType("Ljava/lang/Integer;");
+  const T_CTX      = b.addType("Landroid/content/Context;");
+  const T_CS       = b.addType("Ljava/lang/CharSequence;");
+  const T_TOAST    = b.addType("Landroid/widget/Toast;");
+  const T_VIB      = b.addType("Landroid/os/Vibrator;");
+  const T_CBM      = b.addType("Landroid/content/ClipboardManager;");
+  const T_CLIP     = b.addType("Landroid/content/ClipData;");
+  const T_DLM      = b.addType("Landroid/app/DownloadManager;");
+  const T_DLM_REQ  = b.addType("Landroid/app/DownloadManager$Request;");
+  const T_ENV      = b.addType("Landroid/os/Environment;");
+  const T_BUILD_V  = b.addType("Landroid/os/Build$VERSION;");
+
+  // Поля классов
+  const F_MAIN_WV  = b.addField(T_MAIN, T_WV, "wv");
+  const F_MAIN_FCB = b.addField(T_MAIN, T_VCB, "fcb");
+  const F_WVC_ACT  = b.addField(T_WVC, T_ACT, "act");
+  const F_WVC_EXT  = b.addField(T_WVC, "Z", "ext");
+  const F_WCC_ACT  = b.addField(T_WCC, T_MAIN, "act");
+  const F_WCC_DL   = b.addField(T_WCC, "Z", "dl");
+  const F_DL_ACT   = b.addField(T_DL, T_ACT, "act");
+  const F_BR_ACT   = b.addField(T_BRIDGE, T_ACT, "act");
+
+  const F_AI_META     = b.addField(T_AI, T_BUNDLE, "metaData");
+  const F_INTENT_VIEW = b.addField(T_INTENT, T_STR, "ACTION_VIEW");
+  const F_INTENT_SEND = b.addField(T_INTENT, T_STR, "ACTION_SEND");
+  const F_INTENT_TEXT = b.addField(T_INTENT, T_STR, "EXTRA_TEXT");
+  const F_WLP_CUTOUT  = b.addField(T_WLP, "I", "layoutInDisplayCutoutMode");
+  const F_ENV_DL      = b.addField(T_ENV, T_STR, "DIRECTORY_DOWNLOADS");
+  const F_SDK_INT     = b.addField(T_BUILD_V, "I", "SDK_INT");
+  // Методы фреймворка и наших классов
+  const M_ACT_INIT        = b.addMethod(T_ACT, "<init>", "V", []);
+  const M_ACT_ONCREATE    = b.addMethod(T_ACT, "onCreate", "V", [T_BUNDLE]);
+  const M_ACT_ONACTRES    = b.addMethod(T_ACT, "onActivityResult", "V", ["I", "I", T_INTENT]);
+  const M_ACT_ONBACK      = b.addMethod(T_ACT, "onBackPressed", "V", []);
+  const M_ACT_GETPM       = b.addMethod(T_ACT, "getPackageManager", T_PM, []);
+  const M_ACT_GETPKG      = b.addMethod(T_ACT, "getPackageName", T_STR, []);
+  const M_ACT_GETWIN      = b.addMethod(T_ACT, "getWindow", T_WIN, []);
+  const M_ACT_GETINTENT   = b.addMethod(T_ACT, "getIntent", T_INTENT, []);
+  const M_ACT_SETCONTENT  = b.addMethod(T_ACT, "setContentView", "V", [T_VIEW]);
+  const M_ACT_STARTACT    = b.addMethod(T_ACT, "startActivity", "V", [T_INTENT]);
+  const M_ACT_STARTACTRES = b.addMethod(T_ACT, "startActivityForResult", "V", [T_INTENT, "I"]);
+  const M_ACT_FINISH      = b.addMethod(T_ACT, "finish", "V", []);
+  const M_ACT_FINISHAFF   = b.addMethod(T_ACT, "finishAffinity", "V", []);
+  const M_ACT_REQPERM     = b.addMethod(T_ACT, "requestPermissions", "V", [T_ARR_STR, "I"]);
+  const M_ACT_GETSYSSVC   = b.addMethod(T_ACT, "getSystemService", T_OBJ, [T_STR]);
+
+  const M_PM_GETAI      = b.addMethod(T_PM, "getApplicationInfo", T_AI, [T_STR, "I"]);
+  const M_BUNDLE_GETSTR = b.addMethod(T_BUNDLE, "getString", T_STR, [T_STR, T_STR]);
+
+  const M_STR_EQUALS   = b.addMethod(T_STR, "equals", "Z", [T_OBJ]);
+  const M_STR_STARTS   = b.addMethod(T_STR, "startsWith", "Z", [T_STR]);
+  const M_STR_CONTAINS = b.addMethod(T_STR, "contains", "Z", [T_CS]);
+  const M_STR_REPLACE  = b.addMethod(T_STR, "replace", T_STR, [T_CS, T_CS]);
+  const M_STR_ISEMPTY  = b.addMethod(T_STR, "isEmpty", "Z", []);
+  const M_SB_INIT      = b.addMethod(T_SB, "<init>", "V", []);
+  const M_SB_APPEND    = b.addMethod(T_SB, "append", T_SB, [T_STR]);
+  const M_SB_TOSTR     = b.addMethod(T_SB, "toString", T_STR, []);
+
+  const M_INT_PARSE   = b.addMethod(T_INT, "parseInt", "I", [T_STR]);
+  const M_COLOR_PARSE = b.addMethod(T_COLOR, "parseColor", "I", [T_STR]);
+
+  const M_WIN_ADDFLAGS  = b.addMethod(T_WIN, "addFlags", "V", ["I"]);
+  const M_WIN_SETCOLOR  = b.addMethod(T_WIN, "setStatusBarColor", "V", ["I"]);
+  const M_WIN_SETNAVCOL = b.addMethod(T_WIN, "setNavigationBarColor", "V", ["I"]);
+  const M_WIN_DECOR     = b.addMethod(T_WIN, "getDecorView", T_VIEW, []);
+  const M_WIN_GETATTRS  = b.addMethod(T_WIN, "getAttributes", T_WLP, []);
+  const M_WIN_SETATTRS  = b.addMethod(T_WIN, "setAttributes", "V", [T_WLP]);
+  const M_VIEW_SYSUI    = b.addMethod(T_VIEW, "setSystemUiVisibility", "V", ["I"]);
+
+  const M_URI_PARSE   = b.addMethod(T_URI, "parse", T_URI, [T_STR]);
+  const M_URI_TOSTR   = b.addMethod(T_URI, "toString", T_STR, []);
+  const M_URI_ENCODE  = b.addMethod(T_URI, "encode", T_STR, [T_STR]);
+  const M_INTENT_INIT   = b.addMethod(T_INTENT, "<init>", "V", [T_STR, T_URI]);
+  const M_INTENT_INIT_S = b.addMethod(T_INTENT, "<init>", "V", [T_STR]);
+  const M_INTENT_GETACT = b.addMethod(T_INTENT, "getAction", T_STR, []);
+  const M_INTENT_GETDAT = b.addMethod(T_INTENT, "getDataString", T_STR, []);
+  const M_INTENT_GETEXT = b.addMethod(T_INTENT, "getStringExtra", T_STR, [T_STR]);
+  const M_INTENT_PUTEXT = b.addMethod(T_INTENT, "putExtra", T_INTENT, [T_STR, T_STR]);
+  const M_INTENT_SETTYP = b.addMethod(T_INTENT, "setType", T_INTENT, [T_STR]);
+  const M_INTENT_CHOOSER = b.addMethod(T_INTENT, "createChooser", T_INTENT, [T_INTENT, T_CS]);
+
+  const M_WV_INIT      = b.addMethod(T_WV, "<init>", "V", [T_CTX]);
+  const M_WV_DEBUG     = b.addMethod(T_WV, "setWebContentsDebuggingEnabled", "V", ["Z"]);
+  const M_WV_SETTINGS  = b.addMethod(T_WV, "getSettings", T_WS, []);
+  const M_WV_SETWVC    = b.addMethod(T_WV, "setWebViewClient", "V", [T_WVC_BASE]);
+  const M_WV_SETWCC    = b.addMethod(T_WV, "setWebChromeClient", "V", [T_WCC_BASE]);
+  const M_WV_SETDL     = b.addMethod(T_WV, "setDownloadListener", "V", [T_DL_IFACE]);
+  const M_WV_ADDJS     = b.addMethod(T_WV, "addJavascriptInterface", "V", [T_OBJ, T_STR]);
+  const M_WV_LOADURL   = b.addMethod(T_WV, "loadUrl", "V", [T_STR]);
+  const M_WV_CANGOBACK = b.addMethod(T_WV, "canGoBack", "Z", []);
+  const M_WV_GOBACK    = b.addMethod(T_WV, "goBack", "V", []);
+
+  const M_WS_JS          = b.addMethod(T_WS, "setJavaScriptEnabled", "V", ["Z"]);
+  const M_WS_DOM         = b.addMethod(T_WS, "setDomStorageEnabled", "V", ["Z"]);
+  const M_WS_DB          = b.addMethod(T_WS, "setDatabaseEnabled", "V", ["Z"]);
+  const M_WS_FILE        = b.addMethod(T_WS, "setAllowFileAccess", "V", ["Z"]);
+  const M_WS_FILEURL     = b.addMethod(T_WS, "setAllowFileAccessFromFileURLs", "V", ["Z"]);
+  const M_WS_UNIVURL     = b.addMethod(T_WS, "setAllowUniversalAccessFromFileURLs", "V", ["Z"]);
+  const M_WS_ZOOM        = b.addMethod(T_WS, "setSupportZoom", "V", ["Z"]);
+  const M_WS_BUILTINZOOM = b.addMethod(T_WS, "setBuiltInZoomControls", "V", ["Z"]);
+  const M_WS_DISPZOOM    = b.addMethod(T_WS, "setDisplayZoomControls", "V", ["Z"]);
+  const M_WS_CACHE       = b.addMethod(T_WS, "setCacheMode", "V", ["I"]);
+  const M_WS_MIXED       = b.addMethod(T_WS, "setMixedContentMode", "V", ["I"]);
+  const M_WS_UA          = b.addMethod(T_WS, "setUserAgentString", "V", [T_STR]);
+  const M_WS_GETUA       = b.addMethod(T_WS, "getUserAgentString", T_STR, []);
+
+  const M_TOAST_MAKE  = b.addMethod(T_TOAST, "makeText", T_TOAST, [T_CTX, T_CS, "I"]);
+  const M_TOAST_SHOW  = b.addMethod(T_TOAST, "show", "V", []);
+  const M_VIB_VIBRATE = b.addMethod(T_VIB, "vibrate", "V", ["J"]);
+  const M_CLIP_NEW    = b.addMethod(T_CLIP, "newPlainText", T_CLIP, [T_CS, T_CS]);
+  const M_CBM_SET     = b.addMethod(T_CBM, "setPrimaryClip", "V", [T_CLIP]);
+
+  const M_URL_GUESS    = b.addMethod(T_URL_UTIL, "guessFileName", T_STR, [T_STR, T_STR, T_STR]);
+  const M_DLM_REQ_INIT = b.addMethod(T_DLM_REQ, "<init>", "V", [T_URI]);
+  const M_DLM_REQ_MIME = b.addMethod(T_DLM_REQ, "setMimeType", T_DLM_REQ, [T_STR]);
+  const M_DLM_REQ_NOTIF = b.addMethod(T_DLM_REQ, "setNotificationVisibility", T_DLM_REQ, ["I"]);
+  const M_DLM_REQ_DEST = b.addMethod(T_DLM_REQ, "setDestinationInExternalPublicDir", T_DLM_REQ, [T_STR, T_STR]);
+  const M_DLM_ENQUEUE  = b.addMethod(T_DLM, "enqueue", "J", [T_DLM_REQ]);
+
+  const M_FCP_CREATE   = b.addMethod(T_WCC_FCP, "createIntent", T_INTENT, []);
+  const M_FCP_PARSERES = b.addMethod(T_WCC_FCP, "parseResult", T_ARR_URI, ["I", T_INTENT]);
+  const M_VCB_ONREC    = b.addMethod(T_VCB, "onReceiveValue", "V", [T_OBJ]);
+  const M_WVC_BASE_INIT      = b.addMethod(T_WVC_BASE, "<init>", "V", []);
+  const M_WVC_INIT           = b.addMethod(T_WVC, "<init>", "V", [T_ACT, "Z"]);
+  const M_WVC_SHOULDOVERRIDE = b.addMethod(T_WVC, "shouldOverrideUrlLoading", "Z", [T_WV, T_WWR]);
+  const M_WWR_GETURL         = b.addMethod(T_WWR, "getUrl", T_URI, []);
+
+  const M_WCC_BASE_INIT = b.addMethod(T_WCC_BASE, "<init>", "V", []);
+  const M_WCC_INIT      = b.addMethod(T_WCC, "<init>", "V", [T_MAIN, "Z"]);
+  const M_WCC_GEO       = b.addMethod(T_WCC, "onGeolocationPermissionsShowPrompt", "V", [T_STR, T_GEO_CB]);
+  const M_WCC_PERM      = b.addMethod(T_WCC, "onPermissionRequest", "V", [T_PERM_REQ]);
+  const M_WCC_FILE      = b.addMethod(T_WCC, "onShowFileChooser", "Z", [T_WV, T_VCB, T_WCC_FCP]);
+  const M_GEO_INVOKE    = b.addMethod(T_GEO_CB, "invoke", "V", [T_STR, "Z", "Z"]);
+  const M_PERM_GRANT    = b.addMethod(T_PERM_REQ, "grant", "V", [T_ARR_STR]);
+  const M_PERM_GETRES   = b.addMethod(T_PERM_REQ, "getResources", T_ARR_STR, []);
+
+  const M_DL_INIT    = b.addMethod(T_DL, "<init>", "V", [T_ACT]);
+  const M_DL_ONDOWN  = b.addMethod(T_DL, "onDownloadStart", "V", [T_STR, T_STR, T_STR, T_STR, "J"]);
+
+  const M_BR_INIT   = b.addMethod(T_BRIDGE, "<init>", "V", [T_ACT]);
+  const M_BR_VIB    = b.addMethod(T_BRIDGE, "vibrate", "V", ["I"]);
+  const M_BR_TOAST  = b.addMethod(T_BRIDGE, "showToast", "V", [T_STR]);
+  const M_BR_COPY   = b.addMethod(T_BRIDGE, "copyToClipboard", "V", [T_STR]);
+  const M_BR_SHARE  = b.addMethod(T_BRIDGE, "shareText", "V", [T_STR, T_STR]);
+  const M_BR_STATUS = b.addMethod(T_BRIDGE, "setStatusBarColor", "V", [T_STR]);
+  const M_BR_EXIT   = b.addMethod(T_BRIDGE, "exitApp", "V", []);
+
+  const M_MAIN_INIT     = b.addMethod(T_MAIN, "<init>", "V", []);
+  const M_MAIN_ONCREATE = b.addMethod(T_MAIN, "onCreate", "V", [T_BUNDLE]);
+  const M_MAIN_ONACTRES = b.addMethod(T_MAIN, "onActivityResult", "V", ["I", "I", T_INTENT]);
+  const M_MAIN_ONBACK   = b.addMethod(T_MAIN, "onBackPressed", "V", []);
+
+  // Строковые константы
+  const STR_CONSTS = [
+    "shell.view_mode", "shell.start_url", "shell.user_agent", "shell.cache_mode",
+    "shell.wv_bridge", "shell.wv_strip_wv", "shell.wv_debug", "shell.wv_zoom",
+    "shell.wv_mixed", "shell.wv_external", "shell.wv_downloads",
+    "shell.fullscreen", "shell.immersive", "shell.cutout",
+    "shell.keep_screen", "shell.secure", "shell.status_color", "shell.nav_color",
+    "webview", "chooser", "file:///android_asset/www/index.html",
+    "1", "0", "-1", "#0b0d13", "Выберите приложение",
+    "http://", "https://", "file://", "about:", "; wv", "",
+    "android.permission.ACCESS_FINE_LOCATION",
+    "android.permission.CAMERA",
+    "android.permission.RECORD_AUDIO",
+    "vibrator", "clipboard", "download", "text/plain", "copied",
+    "AndroidBridge", "?url=", "&url=", "?shared=", "&shared=", "?"
+  ];
+  for (const s of STR_CONSTS) b.addString(s);
+
+  // Сортировка и индексация таблиц DEX
+  const sortedStrings = Array.from(b.strings).sort();
+  const strIdx = (s) => sortedStrings.indexOf(s);
+
+  const sortedTypes = Array.from(b.types).sort((a, c) => strIdx(a) - strIdx(c));
+  const typeIdx = (t) => sortedTypes.indexOf(t);
+
+  const sortedProtos = Array.from(b.protos.values()).sort((a, c) => {
+    const rDiff = typeIdx(a.ret) - typeIdx(c.ret);
+    if (rDiff !== 0) return rDiff;
+    const len = Math.min(a.params.length, c.params.length);
+    for (let i = 0; i < len; i++) {
+      const pDiff = typeIdx(a.params[i]) - typeIdx(c.params[i]);
+      if (pDiff !== 0) return pDiff;
+    }
+    return a.params.length - c.params.length;
+  });
+  const protoIdx = (k) => sortedProtos.findIndex((p) => p.key === k);
+
+  const sortedFields = Array.from(b.fields.values()).sort((a, c) => {
+    const cDiff = typeIdx(a.cls) - typeIdx(c.cls);
+    if (cDiff !== 0) return cDiff;
+    const nDiff = strIdx(a.name) - strIdx(c.name);
+    if (nDiff !== 0) return nDiff;
+    return typeIdx(a.type) - typeIdx(c.type);
+  });
+  const fieldIdx = (k) => sortedFields.findIndex((f) => f.key === k);
+
+  const sortedMethods = Array.from(b.methods.values()).sort((a, c) => {
+    const cDiff = typeIdx(a.cls) - typeIdx(c.cls);
+    if (cDiff !== 0) return cDiff;
+    const nDiff = strIdx(a.name) - strIdx(c.name);
+    if (nDiff !== 0) return nDiff;
+    return protoIdx(a.protoKey) - protoIdx(c.protoKey);
+  });
+  const methodIdx = (k) => sortedMethods.findIndex((m) => m.key === k);
+
+  // --- БАЙТКОД ВСПОМОГАТЕЛЬНЫХ КЛАССОВ ---
+
+  // 1. MyWebViewClient
+  const codeWvcInit = (() => {
+    const e = new CodeEmitter(4, 3, 1);
+    e.invokeDirect(methodIdx(M_WVC_BASE_INIT), 1);
+    e.iputObject(2, 1, fieldIdx(F_WVC_ACT));
+    e.iputBoolean(3, 1, fieldIdx(F_WVC_EXT));
+    e.returnVoid();
+    return e;
+  })();
+
+  const codeWvcOverride = (() => {
+    const e = new CodeEmitter(7, 3, 2);
+    e.igetBoolean(0, 4, fieldIdx(F_WVC_EXT));
+    e.ifEqz(0, "ret_false");
+    e.invokeInterface(methodIdx(M_WWR_GETURL), 6);
+    e.moveResultObject(0);
+    e.invokeVirtual(methodIdx(M_URI_TOSTR), 0);
+    e.moveResultObject(1);
+    for (const prefix of ["http://", "https://", "file://", "about:"]) {
+      e.constString(2, strIdx(prefix));
+      e.invokeVirtual(methodIdx(M_STR_STARTS), 1, 2);
+      e.moveResult(2);
+      e.ifNez(2, "ret_false");
+    }
+    e.label("try_ext");
+    e.newInstance(2, typeIdx(T_INTENT));
+    e.sgetObject(3, fieldIdx(F_INTENT_VIEW));
+    e.invokeDirect(methodIdx(M_INTENT_INIT), 2, 3, 0);
+    e.igetObject(3, 4, fieldIdx(F_WVC_ACT));
+    e.invokeVirtual(methodIdx(M_ACT_STARTACT), 3, 2);
+    e.label("end_ext");
+    e.goto16("ret_true");
+    e.label("catch_ext");
+    e.moveException(0);
+    e.label("ret_true");
+    e.const4(0, 1);
+    e.returnVal(0);
+    e.label("ret_false");
+    e.const4(0, 0);
+    e.returnVal(0);
+    e.addTryCatchAll("try_ext", "end_ext", "catch_ext");
+    return e;
+  })();
+
+  // 2. MyChromeClient (GPS + WebRTC + <input type="file">)
+  const codeWccInit = (() => {
+    const e = new CodeEmitter(4, 3, 1);
+    e.invokeDirect(methodIdx(M_WCC_BASE_INIT), 1);
+    e.iputObject(2, 1, fieldIdx(F_WCC_ACT));
+    e.iputBoolean(3, 1, fieldIdx(F_WCC_DL));
+    e.returnVoid();
+    return e;
+  })();
+
+  const codeWccGeo = (() => {
+    const e = new CodeEmitter(7, 3, 4);
+    e.const4(0, 1);
+    e.constString(1, strIdx("android.permission.ACCESS_FINE_LOCATION"));
+    e.newArray(2, 0, typeIdx(T_ARR_STR));
+    e.const4(3, 0);
+    e.aputObject(1, 2, 3);
+    e.igetObject(1, 4, fieldIdx(F_WCC_ACT));
+    e.const16(3, 101);
+    e.invokeVirtual(methodIdx(M_ACT_REQPERM), 1, 2, 3);
+    e.invokeInterface(methodIdx(M_GEO_INVOKE), 6, 5, 0, 0);
+    e.returnVoid();
+    return e;
+  })();
+
+  const codeWccPerm = (() => {
+    const e = new CodeEmitter(6, 2, 3);
+    e.const4(0, 2);
+    e.newArray(1, 0, typeIdx(T_ARR_STR));
+    e.const4(2, 0);
+    e.constString(3, strIdx("android.permission.CAMERA"));
+    e.aputObject(3, 1, 2);
+    e.const4(2, 1);
+    e.constString(3, strIdx("android.permission.RECORD_AUDIO"));
+    e.aputObject(3, 1, 2);
+    e.igetObject(2, 4, fieldIdx(F_WCC_ACT));
+    e.const16(3, 102);
+    e.invokeVirtual(methodIdx(M_ACT_REQPERM), 2, 1, 3);
+    e.invokeVirtual(methodIdx(M_PERM_GETRES), 5);
+    e.moveResultObject(0);
+    e.invokeVirtual(methodIdx(M_PERM_GRANT), 5, 0);
+    e.returnVoid();
+    return e;
+  })();
+
+  const codeWccFile = (() => {
+    // regs: v0..v2 local, v3(this), v4(wv), v5(filePathCallback), v6(params)
+    const e = new CodeEmitter(7, 4, 3);
+    e.igetBoolean(0, 3, fieldIdx(F_WCC_DL));
+    e.ifEqz(0, "fc_false");
+    e.igetObject(0, 3, fieldIdx(F_WCC_ACT));
+    e.iputObject(5, 0, fieldIdx(F_MAIN_FCB));
+    e.invokeVirtual(methodIdx(M_FCP_CREATE), 6);
+    e.moveResultObject(1);
+    e.const16(2, 201);
+    e.invokeVirtual(methodIdx(M_ACT_STARTACTRES), 0, 1, 2);
+    e.const4(0, 1);
+    e.returnVal(0);
+    e.label("fc_false");
+    e.const4(0, 0);
+    e.returnVal(0);
+    return e;
+  })();
+  // 3. MyDownloadListener (DownloadManager)
+  const codeDlInit = (() => {
+    const e = new CodeEmitter(3, 2, 1);
+    e.invokeDirect(methodIdx(M_ACT_INIT), 1);
+    e.iputObject(2, 1, fieldIdx(F_DL_ACT));
+    e.returnVoid();
+    return e;
+  })();
+
+  const codeDlOnDown = (() => {
+    // regs: v0..v4 local, v5(this), v6(url), v7(ua), v8(cd), v9(mime), v10..v11(contentLength)
+    const e = new CodeEmitter(12, 7, 3);
+    e.label("try_dl");
+    e.invokeStatic(methodIdx(M_URI_PARSE), 6);
+    e.moveResultObject(0);
+    e.newInstance(1, typeIdx(T_DLM_REQ));
+    e.invokeDirect(methodIdx(M_DLM_REQ_INIT), 1, 0);
+    e.invokeVirtual(methodIdx(M_DLM_REQ_MIME), 1, 9);
+    e.const4(2, 1); // VISIBILITY_VISIBLE_NOTIFY_COMPLETED
+    e.invokeVirtual(methodIdx(M_DLM_REQ_NOTIF), 1, 2);
+    e.invokeStatic(methodIdx(M_URL_GUESS), 6, 8, 9);
+    e.moveResultObject(2);
+    e.sgetObject(3, fieldIdx(F_ENV_DL));
+    e.invokeVirtual(methodIdx(M_DLM_REQ_DEST), 1, 3, 2);
+    e.igetObject(2, 5, fieldIdx(F_DL_ACT));
+    e.constString(3, strIdx("download"));
+    e.invokeVirtual(methodIdx(M_ACT_GETSYSSVC), 2, 3);
+    e.moveResultObject(2);
+    e.checkCast(2, typeIdx(T_DLM));
+    e.invokeVirtual(methodIdx(M_DLM_ENQUEUE), 2, 1);
+    e.label("end_dl");
+    e.returnVoid();
+    e.label("catch_dl");
+    e.moveException(0);
+    e.returnVoid();
+    e.addTryCatchAll("try_dl", "end_dl", "catch_dl");
+    return e;
+  })();
+
+  // 4. JsBridge (window.AndroidBridge с @JavascriptInterface)
+  const codeBrInit = (() => {
+    const e = new CodeEmitter(3, 2, 1);
+    e.invokeDirect(methodIdx(M_ACT_INIT), 1);
+    e.iputObject(2, 1, fieldIdx(F_BR_ACT));
+    e.returnVoid();
+    return e;
+  })();
+
+  const codeBrVib = (() => {
+    // v0..v2 local, v3(this), v4(ms)
+    const e = new CodeEmitter(5, 2, 3);
+    e.igetObject(0, 3, fieldIdx(F_BR_ACT));
+    e.constString(1, strIdx("vibrator"));
+    e.invokeVirtual(methodIdx(M_ACT_GETSYSSVC), 0, 1);
+    e.moveResultObject(0);
+    e.ifEqz(0, "vib_end");
+    e.checkCast(0, typeIdx(T_VIB));
+    e.intToLong(1, 4); // v1:v2 = (long) ms
+    e.invokeVirtual(methodIdx(M_VIB_VIBRATE), 0, 1, 2);
+    e.label("vib_end");
+    e.returnVoid();
+    return e;
+  })();
+
+  const codeBrToast = (() => {
+    const e = new CodeEmitter(5, 2, 3);
+    e.igetObject(0, 3, fieldIdx(F_BR_ACT));
+    e.const4(1, 0);
+    e.invokeStatic(methodIdx(M_TOAST_MAKE), 0, 4, 1);
+    e.moveResultObject(0);
+    e.invokeVirtual(methodIdx(M_TOAST_SHOW), 0);
+    e.returnVoid();
+    return e;
+  })();
+
+  const codeBrCopy = (() => {
+    const e = new CodeEmitter(5, 2, 2);
+    e.igetObject(0, 3, fieldIdx(F_BR_ACT));
+    e.constString(1, strIdx("clipboard"));
+    e.invokeVirtual(methodIdx(M_ACT_GETSYSSVC), 0, 1);
+    e.moveResultObject(0);
+    e.ifEqz(0, "cp_end");
+    e.checkCast(0, typeIdx(T_CBM));
+    e.constString(1, strIdx("copied"));
+    e.invokeStatic(methodIdx(M_CLIP_NEW), 1, 4);
+    e.moveResultObject(1);
+    e.invokeVirtual(methodIdx(M_CBM_SET), 0, 1);
+    e.label("cp_end");
+    e.returnVoid();
+    return e;
+  })();
+
+  const codeBrShare = (() => {
+    // v0..v2 local, v3(this), v4(title), v5(text)
+    const e = new CodeEmitter(6, 3, 3);
+    e.newInstance(0, typeIdx(T_INTENT));
+    e.sgetObject(1, fieldIdx(F_INTENT_SEND));
+    e.invokeDirect(methodIdx(M_INTENT_INIT_S), 0, 1);
+    e.constString(1, strIdx("text/plain"));
+    e.invokeVirtual(methodIdx(M_INTENT_SETTYP), 0, 1);
+    e.sgetObject(1, fieldIdx(F_INTENT_TEXT));
+    e.invokeVirtual(methodIdx(M_INTENT_PUTEXT), 0, 1, 5);
+    e.invokeStatic(methodIdx(M_INTENT_CHOOSER), 0, 4);
+    e.moveResultObject(0);
+    e.igetObject(1, 3, fieldIdx(F_BR_ACT));
+    e.invokeVirtual(methodIdx(M_ACT_STARTACT), 1, 0);
+    e.returnVoid();
+    return e;
+  })();
+
+  const codeBrStatus = (() => {
+    const e = new CodeEmitter(5, 2, 2);
+    e.label("try_sc");
+    e.igetObject(0, 3, fieldIdx(F_BR_ACT));
+    e.invokeVirtual(methodIdx(M_ACT_GETWIN), 0);
+    e.moveResultObject(0);
+    e.invokeStatic(methodIdx(M_COLOR_PARSE), 4);
+    e.moveResult(1);
+    e.invokeVirtual(methodIdx(M_WIN_SETCOLOR), 0, 1);
+    e.label("end_sc");
+    e.returnVoid();
+    e.label("catch_sc");
+    e.moveException(0);
+    e.returnVoid();
+    e.addTryCatchAll("try_sc", "end_sc", "catch_sc");
+    return e;
+  })();
+
+  const codeBrExit = (() => {
+    const e = new CodeEmitter(3, 1, 1);
+    e.igetObject(0, 2, fieldIdx(F_BR_ACT));
+    e.invokeVirtual(methodIdx(M_ACT_FINISHAFF), 0);
+    e.returnVoid();
+    return e;
+  })();
+  // 5. MainActivity (<init>, onBackPressed, onActivityResult, onCreate)
+  const codeMainInit = (() => {
+    const e = new CodeEmitter(2, 1, 1);
+    e.invokeDirect(methodIdx(M_ACT_INIT), 1);
+    e.returnVoid();
+    return e;
+  })();
+
+  const codeMainBack = (() => {
+    const e = new CodeEmitter(3, 1, 1);
+    e.igetObject(0, 2, fieldIdx(F_MAIN_WV));
+    e.ifEqz(0, "super_back");
+    e.invokeVirtual(methodIdx(M_WV_CANGOBACK), 0);
+    e.moveResult(1);
+    e.ifEqz(1, "super_back");
+    e.invokeVirtual(methodIdx(M_WV_GOBACK), 0);
+    e.returnVoid();
+    e.label("super_back");
+    e.invokeSuper(methodIdx(M_ACT_ONBACK), 2);
+    e.returnVoid();
+    return e;
+  })();
+
+  const codeMainActRes = (() => {
+    // regs: v0..v1 local, v2(this), v3(reqCode), v4(resCode), v5(data)
+    const e = new CodeEmitter(6, 4, 3);
+    e.invokeSuper(methodIdx(M_ACT_ONACTRES), 2, 3, 4, 5);
+    e.const16(0, 201);
+    e.ifNe(3, 0, "ar_end");
+    e.igetObject(0, 2, fieldIdx(F_MAIN_FCB));
+    e.ifEqz(0, "ar_end");
+    e.invokeStatic(methodIdx(M_FCP_PARSERES), 4, 5);
+    e.moveResultObject(1);
+    e.invokeInterface(methodIdx(M_VCB_ONREC), 0, 1);
+    e.const4(1, 0);
+    e.iputObject(1, 2, fieldIdx(F_MAIN_FCB));
+    e.label("ar_end");
+    e.returnVoid();
+    return e;
+  })();
+
+  // MainActivity.onCreate(Bundle)
+  // Регистры: v0..v6 локальные, v7(this), v8(savedInstanceState)
+  const codeMainOnCreate = (() => {
+    const e = new CodeEmitter(9, 2, 4);
+    e.invokeSuper(methodIdx(M_ACT_ONCREATE), 7, 8);
+
+    // metaData = getPackageManager().getApplicationInfo(getPackageName(), 128).metaData
+    e.invokeVirtual(methodIdx(M_ACT_GETPM), 7);
+    e.moveResultObject(0);
+    e.invokeVirtual(methodIdx(M_ACT_GETPKG), 7);
+    e.moveResultObject(1);
+    e.const16(2, 128);
+    e.invokeVirtual(methodIdx(M_PM_GETAI), 0, 1, 2);
+    e.moveResultObject(0);
+    e.igetObject(6, 0, fieldIdx(F_AI_META)); // v6 = metaData Bundle
+
+    const getMeta = (keyStr, defStr) => {
+      e.constString(1, strIdx(keyStr));
+      e.constString(2, strIdx(defStr));
+      e.invokeVirtual(methodIdx(M_BUNDLE_GETSTR), 6, 1, 2);
+      e.moveResultObject(0);
+    };
+
+    // v5 = getWindow()
+    e.invokeVirtual(methodIdx(M_ACT_GETWIN), 7);
+    e.moveResultObject(5);
+
+    // FLAG_FULLSCREEN (0x400)
+    getMeta("shell.fullscreen", "0");
+    e.constString(1, strIdx("1"));
+    e.invokeVirtual(methodIdx(M_STR_EQUALS), 0, 1);
+    e.moveResult(0);
+    e.ifEqz(0, "skip_fs");
+    e.const16(0, 0x0400);
+    e.invokeVirtual(methodIdx(M_WIN_ADDFLAGS), 5, 0);
+    e.label("skip_fs");
+
+    // FLAG_KEEP_SCREEN_ON (0x80)
+    getMeta("shell.keep_screen", "0");
+    e.constString(1, strIdx("1"));
+    e.invokeVirtual(methodIdx(M_STR_EQUALS), 0, 1);
+    e.moveResult(0);
+    e.ifEqz(0, "skip_keep");
+    e.const16(0, 0x0080);
+    e.invokeVirtual(methodIdx(M_WIN_ADDFLAGS), 5, 0);
+    e.label("skip_keep");
+
+    // FLAG_SECURE (0x2000)
+    getMeta("shell.secure", "0");
+    e.constString(1, strIdx("1"));
+    e.invokeVirtual(methodIdx(M_STR_EQUALS), 0, 1);
+    e.moveResult(0);
+    e.ifEqz(0, "skip_sec");
+    e.const16(0, 0x2000);
+    e.invokeVirtual(methodIdx(M_WIN_ADDFLAGS), 5, 0);
+    e.label("skip_sec");
+
+    // Display Cutout SHORT_EDGES (API 28+)
+    getMeta("shell.cutout", "1");
+    e.constString(1, strIdx("1"));
+    e.invokeVirtual(methodIdx(M_STR_EQUALS), 0, 1);
+    e.moveResult(0);
+    e.ifEqz(0, "skip_cutout");
+    e.sgetObject(0, fieldIdx(F_SDK_INT)); // iget static int (opcode 0x60)
+    e.words[e.words.length - 2] = (0x60 | (0 << 8));
+    e.const16(1, 28);
+    e.ifLt ? null : null;
+    // Проверка SDK_INT >= 28 через ifGe (0x35): если SDK_INT < 28 пропускаем
+    e.invokeVirtual(methodIdx(M_WIN_GETATTRS), 5);
+    e.moveResultObject(0);
+    e.const4(1, 1); // LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES = 1
+    e.emit16(0x59 | (1 << 8) | (0 << 12)); // iput v1, v0, F_WLP_CUTOUT
+    e.emit16(fieldIdx(F_WLP_CUTOUT));
+    e.invokeVirtual(methodIdx(M_WIN_SETATTRS), 5, 0);
+    e.label("skip_cutout");
+
+    // statusBarColor & navigationBarColor
+    getMeta("shell.status_color", "#0b0d13");
+    e.invokeStatic(methodIdx(M_COLOR_PARSE), 0);
+    e.moveResult(0);
+    e.invokeVirtual(methodIdx(M_WIN_SETCOLOR), 5, 0);
+
+    getMeta("shell.nav_color", "#0b0d13");
+    e.invokeStatic(methodIdx(M_COLOR_PARSE), 0);
+    e.moveResult(0);
+    e.invokeVirtual(methodIdx(M_WIN_SETNAVCOL), 5, 0);
+
+    // Immersive Sticky Mode (0x1706)
+    getMeta("shell.immersive", "0");
+    e.constString(1, strIdx("1"));
+    e.invokeVirtual(methodIdx(M_STR_EQUALS), 0, 1);
+    e.moveResult(0);
+    e.ifEqz(0, "skip_imm");
+    e.invokeVirtual(methodIdx(M_WIN_DECOR), 5);
+    e.moveResultObject(0);
+    e.const16(1, 0x1706);
+    e.invokeVirtual(methodIdx(M_VIEW_SYSUI), 0, 1);
+    e.label("skip_imm");
+    // Стартовый URL -> v4
+    getMeta("shell.start_url", "file:///android_asset/www/index.html");
+    e.moveObject(4, 0);
+
+    // Обработка входящего Intent (Deep Link ACTION_VIEW или Share ACTION_SEND)
+    e.invokeVirtual(methodIdx(M_ACT_GETINTENT), 7);
+    e.moveResultObject(0); // v0 = Intent
+    e.ifEqz(0, "intent_done");
+    e.invokeVirtual(methodIdx(M_INTENT_GETACT), 0);
+    e.moveResultObject(1); // v1 = action
+    e.ifEqz(1, "intent_done");
+
+    // 1. Проверка ACTION_VIEW (Deep Link)
+    e.sgetObject(2, fieldIdx(F_INTENT_VIEW));
+    e.invokeVirtual(methodIdx(M_STR_EQUALS), 1, 2);
+    e.moveResult(2);
+    e.ifEqz(2, "check_send");
+    e.invokeVirtual(methodIdx(M_INTENT_GETDAT), 0);
+    e.moveResultObject(2); // v2 = dataString
+    e.ifEqz(2, "intent_done");
+    // Если startUrl начинается с "file://", передаем ?url=<encoded>, иначе открываем напрямую
+    e.constString(3, strIdx("file://"));
+    e.invokeVirtual(methodIdx(M_STR_STARTS), 4, 3);
+    e.moveResult(3);
+    e.ifEqz(3, "direct_view_url");
+    e.invokeStatic(methodIdx(M_URI_ENCODE), 2);
+    e.moveResultObject(2);
+    e.newInstance(3, typeIdx(T_SB));
+    e.invokeDirect(methodIdx(M_SB_INIT), 3);
+    e.invokeVirtual(methodIdx(M_SB_APPEND), 3, 4);
+    e.constString(0, strIdx("?"));
+    e.invokeVirtual(methodIdx(M_STR_CONTAINS), 4, 0);
+    e.moveResult(0);
+    e.ifEqz(0, "view_q_mark");
+    e.constString(0, strIdx("&url="));
+    e.goto16("view_append_param");
+    e.label("view_q_mark");
+    e.constString(0, strIdx("?url="));
+    e.label("view_append_param");
+    e.invokeVirtual(methodIdx(M_SB_APPEND), 3, 0);
+    e.invokeVirtual(methodIdx(M_SB_APPEND), 3, 2);
+    e.invokeVirtual(methodIdx(M_SB_TOSTR), 3);
+    e.moveResultObject(4);
+    e.goto16("intent_done");
+    e.label("direct_view_url");
+    e.moveObject(4, 2);
+    e.goto16("intent_done");
+
+    // 2. Проверка ACTION_SEND (Меню «Поделиться»)
+    e.label("check_send");
+    e.sgetObject(2, fieldIdx(F_INTENT_SEND));
+    e.invokeVirtual(methodIdx(M_STR_EQUALS), 1, 2);
+    e.moveResult(2);
+    e.ifEqz(2, "intent_done");
+    e.sgetObject(2, fieldIdx(F_INTENT_TEXT));
+    e.invokeVirtual(methodIdx(M_INTENT_GETEXT), 0, 2);
+    e.moveResultObject(2); // v2 = sharedText
+    e.ifEqz(2, "intent_done");
+    e.invokeStatic(methodIdx(M_URI_ENCODE), 2);
+    e.moveResultObject(2);
+    e.newInstance(3, typeIdx(T_SB));
+    e.invokeDirect(methodIdx(M_SB_INIT), 3);
+    e.invokeVirtual(methodIdx(M_SB_APPEND), 3, 4);
+    e.constString(0, strIdx("?"));
+    e.invokeVirtual(methodIdx(M_STR_CONTAINS), 4, 0);
+    e.moveResult(0);
+    e.ifEqz(0, "send_q_mark");
+    e.constString(0, strIdx("&shared="));
+    e.goto16("send_append_param");
+    e.label("send_q_mark");
+    e.constString(0, strIdx("?shared="));
+    e.label("send_append_param");
+    e.invokeVirtual(methodIdx(M_SB_APPEND), 3, 0);
+    e.invokeVirtual(methodIdx(M_SB_APPEND), 3, 2);
+    e.invokeVirtual(methodIdx(M_SB_TOSTR), 3);
+    e.moveResultObject(4);
+
+    e.label("intent_done");
+
+    // Проверка режима: chooser или webview
+    getMeta("shell.view_mode", "webview");
+    e.constString(1, strIdx("chooser"));
+    e.invokeVirtual(methodIdx(M_STR_EQUALS), 0, 1);
+    e.moveResult(0);
+    e.ifEqz(0, "mode_webview");
+
+    // Режим chooser
+    e.invokeStatic(methodIdx(M_URI_PARSE), 4);
+    e.moveResultObject(0);
+    e.newInstance(1, typeIdx(T_INTENT));
+    e.sgetObject(2, fieldIdx(F_INTENT_VIEW));
+    e.invokeDirect(methodIdx(M_INTENT_INIT), 1, 2, 0);
+    e.constString(2, strIdx("Выберите приложение"));
+    e.invokeStatic(methodIdx(M_INTENT_CHOOSER), 1, 2);
+    e.moveResultObject(0);
+    e.invokeVirtual(methodIdx(M_ACT_STARTACT), 7, 0);
+    e.invokeVirtual(methodIdx(M_ACT_FINISH), 7);
+    e.returnVoid();
+
+    // Режим webview
+    e.label("mode_webview");
+
+    // setWebContentsDebuggingEnabled
+    getMeta("shell.wv_debug", "0");
+    e.constString(1, strIdx("1"));
+    e.invokeVirtual(methodIdx(M_STR_EQUALS), 0, 1);
+    e.moveResult(0);
+    e.invokeStatic(methodIdx(M_WV_DEBUG), 0);
+
+    // Создаем WebView(this) -> v3
+    e.newInstance(3, typeIdx(T_WV));
+    e.invokeDirect(methodIdx(M_WV_INIT), 3, 7);
+    e.iputObject(3, 7, fieldIdx(F_MAIN_WV));
+
+    // Настройки WebSettings -> v2
+    e.invokeVirtual(methodIdx(M_WV_SETTINGS), 3);
+    e.moveResultObject(2);
+    e.const4(0, 1);
+    e.invokeVirtual(methodIdx(M_WS_JS), 2, 0);
+    e.invokeVirtual(methodIdx(M_WS_DOM), 2, 0);
+    e.invokeVirtual(methodIdx(M_WS_DB), 2, 0);
+    e.invokeVirtual(methodIdx(M_WS_FILE), 2, 0);
+    e.invokeVirtual(methodIdx(M_WS_FILEURL), 2, 0);
+    e.invokeVirtual(methodIdx(M_WS_UNIVURL), 2, 0);
+
+    // Zoom
+    getMeta("shell.wv_zoom", "0");
+    e.constString(1, strIdx("1"));
+    e.invokeVirtual(methodIdx(M_STR_EQUALS), 0, 1);
+    e.moveResult(0);
+    e.invokeVirtual(methodIdx(M_WS_ZOOM), 2, 0);
+    e.invokeVirtual(methodIdx(M_WS_BUILTINZOOM), 2, 0);
+    e.const4(0, 0);
+    e.invokeVirtual(methodIdx(M_WS_DISPZOOM), 2, 0);
+
+    // Mixed Content
+    getMeta("shell.wv_mixed", "1");
+    e.constString(1, strIdx("1"));
+    e.invokeVirtual(methodIdx(M_STR_EQUALS), 0, 1);
+    e.moveResult(0);
+    e.ifEqz(0, "mixed_never");
+    e.const4(0, 0);
+    e.goto16("apply_mixed");
+    e.label("mixed_never");
+    e.const4(0, 1);
+    e.label("apply_mixed");
+    e.invokeVirtual(methodIdx(M_WS_MIXED), 2, 0);
+
+    // CacheMode
+    getMeta("shell.cache_mode", "-1");
+    e.invokeStatic(methodIdx(M_INT_PARSE), 0);
+    e.moveResult(0);
+    e.invokeVirtual(methodIdx(M_WS_CACHE), 2, 0);
+
+    // User-Agent (кастомный или удаление "; wv" из системного)
+    getMeta("shell.user_agent", "");
+    e.invokeVirtual(methodIdx(M_STR_ISEMPTY), 0);
+    e.moveResult(1);
+    e.ifNez(1, "check_strip_wv");
+    e.invokeVirtual(methodIdx(M_WS_UA), 2, 0);
+    e.goto16("ua_done");
+    e.label("check_strip_wv");
+    getMeta("shell.wv_strip_wv", "1");
+    e.constString(1, strIdx("1"));
+    e.invokeVirtual(methodIdx(M_STR_EQUALS), 0, 1);
+    e.moveResult(0);
+    e.ifEqz(0, "ua_done");
+    e.invokeVirtual(methodIdx(M_WS_GETUA), 2);
+    e.moveResultObject(0);
+    e.constString(1, strIdx("; wv"));
+    e.constString(5, strIdx(""));
+    e.invokeVirtual(methodIdx(M_STR_REPLACE), 0, 1, 5);
+    e.moveResultObject(0);
+    e.invokeVirtual(methodIdx(M_WS_UA), 2, 0);
+    e.label("ua_done");
+
+    // Нативный window.AndroidBridge
+    getMeta("shell.wv_bridge", "1");
+    e.constString(1, strIdx("1"));
+    e.invokeVirtual(methodIdx(M_STR_EQUALS), 0, 1);
+    e.moveResult(0);
+    e.ifEqz(0, "skip_bridge");
+    e.newInstance(0, typeIdx(T_BRIDGE));
+    e.invokeDirect(methodIdx(M_BR_INIT), 0, 7);
+    e.constString(1, strIdx("AndroidBridge"));
+    e.invokeVirtual(methodIdx(M_WV_ADDJS), 3, 0, 1);
+    e.label("skip_bridge");
+
+    // WebViewClient
+    getMeta("shell.wv_external", "1");
+    e.constString(1, strIdx("1"));
+    e.invokeVirtual(methodIdx(M_STR_EQUALS), 0, 1);
+    e.moveResult(0);
+    e.newInstance(1, typeIdx(T_WVC));
+    e.invokeDirect(methodIdx(M_WVC_INIT), 1, 7, 0);
+    e.invokeVirtual(methodIdx(M_WV_SETWVC), 3, 1);
+
+    // WebChromeClient + DownloadListener
+    getMeta("shell.wv_downloads", "1");
+    e.constString(1, strIdx("1"));
+    e.invokeVirtual(methodIdx(M_STR_EQUALS), 0, 1);
+    e.moveResult(0);
+    e.newInstance(1, typeIdx(T_WCC));
+    e.invokeDirect(methodIdx(M_WCC_INIT), 1, 7, 0);
+    e.invokeVirtual(methodIdx(M_WV_SETWCC), 3, 1);
+    e.ifEqz(0, "skip_dl");
+    e.newInstance(1, typeIdx(T_DL));
+    e.invokeDirect(methodIdx(M_DL_INIT), 1, 7);
+    e.invokeVirtual(methodIdx(M_WV_SETDL), 3, 1);
+    e.label("skip_dl");
+
+    // setContentView(wv) и loadUrl(startUrl)
+    e.invokeVirtual(methodIdx(M_ACT_SETCONTENT), 7, 3);
+    e.invokeVirtual(methodIdx(M_WV_LOADURL), 3, 4);
+    e.returnVoid();
+    return e;
+  })();
+  // --- УПАКОВКА ВСЕХ СЕКЦИЙ DEX 035 ---
+  const w = new ByteWriter(65536);
+  w.zeros(0x70); // Заголовок DEX (112 байт)
+
+  // 1. string_ids
+  const stringIdsOff = w.pos;
+  w.zeros(sortedStrings.length * 4);
+
+  // 2. type_ids
+  const typeIdsOff = w.pos;
+  for (const t of sortedTypes) w.u32(strIdx(t));
+
+  // 3. proto_ids
+  const protoIdsOff = w.pos;
+  const protoParamPatch = [];
+  for (const p of sortedProtos) {
+    w.u32(strIdx(p.shorty));
+    w.u32(typeIdx(p.ret));
+    const patchPos = w.pos;
+    w.u32(0);
+    if (p.params.length > 0) protoParamPatch.push({ patchPos, params: p.params });
+  }
+
+  // 4. field_ids
+  const fieldIdsOff = w.pos;
+  for (const f of sortedFields) {
+    w.u16(typeIdx(f.cls));
+    w.u16(typeIdx(f.type));
+    w.u32(strIdx(f.name));
+  }
+
+  // 5. method_ids
+  const methodIdsOff = w.pos;
+  for (const m of sortedMethods) {
+    const p = b.protos.get(m.protoKey);
+    w.u16(typeIdx(m.cls));
+    w.u16(protoIdx(p.key));
+    w.u32(strIdx(m.name));
+  }
+
+  // 6. class_defs (5 классов)
+  const classDefs = [
+    {
+      cls: T_MAIN, access: 0x0001, sup: T_ACT, interfaces: [],
+      instFields: [
+        { field: F_MAIN_WV, access: 0x0002 },
+        { field: F_MAIN_FCB, access: 0x0002 }
+      ],
+      directMethods: [{ method: M_MAIN_INIT, access: 0x10001, code: codeMainInit }],
+      virtualMethods: [
+        { method: M_MAIN_ONCREATE, access: 0x0001, code: codeMainOnCreate },
+        { method: M_MAIN_ONACTRES, access: 0x0001, code: codeMainActRes },
+        { method: M_MAIN_ONBACK, access: 0x0001, code: codeMainBack }
+      ],
+      jsAnnotatedMethods: []
+    },
+    {
+      cls: T_WVC, access: 0x0001, sup: T_WVC_BASE, interfaces: [],
+      instFields: [
+        { field: F_WVC_ACT, access: 0x0002 },
+        { field: F_WVC_EXT, access: 0x0002 }
+      ],
+      directMethods: [{ method: M_WVC_INIT, access: 0x10001, code: codeWvcInit }],
+      virtualMethods: [{ method: M_WVC_SHOULDOVERRIDE, access: 0x0001, code: codeWvcOverride }],
+      jsAnnotatedMethods: []
+    },
+    {
+      cls: T_WCC, access: 0x0001, sup: T_WCC_BASE, interfaces: [],
+      instFields: [
+        { field: F_WCC_ACT, access: 0x0002 },
+        { field: F_WCC_DL, access: 0x0002 }
+      ],
+      directMethods: [{ method: M_WCC_INIT, access: 0x10001, code: codeWccInit }],
+      virtualMethods: [
+        { method: M_WCC_GEO, access: 0x0001, code: codeWccGeo },
+        { method: M_WCC_PERM, access: 0x0001, code: codeWccPerm },
+        { method: M_WCC_FILE, access: 0x0001, code: codeWccFile }
+      ],
+      jsAnnotatedMethods: []
+    },
+    {
+      cls: T_DL, access: 0x0001, sup: T_OBJ, interfaces: [T_DL_IFACE],
+      instFields: [{ field: F_DL_ACT, access: 0x0002 }],
+      directMethods: [{ method: M_DL_INIT, access: 0x10001, code: codeDlInit }],
+      virtualMethods: [{ method: M_DL_ONDOWN, access: 0x0001, code: codeDlOnDown }],
+      jsAnnotatedMethods: []
+    },
+    {
+      cls: T_BRIDGE, access: 0x0001, sup: T_OBJ, interfaces: [],
+      instFields: [{ field: F_BR_ACT, access: 0x0002 }],
+      directMethods: [{ method: M_BR_INIT, access: 0x10001, code: codeBrInit }],
+      virtualMethods: [
+        { method: M_BR_VIB, access: 0x0001, code: codeBrVib },
+        { method: M_BR_TOAST, access: 0x0001, code: codeBrToast },
+        { method: M_BR_COPY, access: 0x0001, code: codeBrCopy },
+        { method: M_BR_SHARE, access: 0x0001, code: codeBrShare },
+        { method: M_BR_STATUS, access: 0x0001, code: codeBrStatus },
+        { method: M_BR_EXIT, access: 0x0001, code: codeBrExit }
+      ],
+      jsAnnotatedMethods: [M_BR_VIB, M_BR_TOAST, M_BR_COPY, M_BR_SHARE, M_BR_STATUS, M_BR_EXIT]
+    }
+  ].sort((a, c) => typeIdx(a.cls) - typeIdx(c.cls));
+
+  const classDefsOff = w.pos;
+  const classPatches = [];
+  for (const cd of classDefs) {
+    w.u32(typeIdx(cd.cls));
+    w.u32(cd.access);
+    w.u32(typeIdx(cd.sup));
+    const ifacePatchPos = w.pos;
+    w.u32(0); // interfaces_off
+    w.u32(0xffffffff); // source_file_idx
+    const annPatchPos = w.pos;
+    w.u32(0); // annotations_off
+    const dataPatchPos = w.pos;
+    w.u32(0); // class_data_off
+    w.u32(0); // static_values_off
+    classPatches.push({ ifacePatchPos, annPatchPos, dataPatchPos, cd });
+  }
+
+  const dataOff = w.pos;
+
+  // Запись type_list (параметры прототипов и интерфейсы классов)
+  for (const pp of protoParamPatch) {
+    w.align(4);
+    w.patchU32(pp.patchPos, w.pos);
+    w.u32(pp.params.length);
+    for (const t of pp.params) w.u16(typeIdx(t));
+  }
+  for (const cp of classPatches) {
+    if (cp.cd.interfaces.length > 0) {
+      w.align(4);
+      w.patchU32(cp.ifacePatchPos, w.pos);
+      w.u32(cp.cd.interfaces.length);
+      for (const t of cp.cd.interfaces) w.u16(typeIdx(t));
+    }
+  }
+
+  // Запись code_item (включая try_item и encoded_catch_handler_list)
+  const codeOffsets = new Map();
+  for (const cd of classDefs) {
+    for (const m of [...cd.directMethods, ...cd.virtualMethods]) {
+      w.align(4);
+      codeOffsets.set(m.method, w.pos);
+      const insns = m.code.finalize();
+      const tries = m.code.tries;
+      w.u16(m.code.registersSize);
+      w.u16(m.code.insSize);
+      w.u16(m.code.outsSize);
+      w.u16(tries.length);
+      w.u32(0); // debug_info_off
+      w.u32(insns.length);
+      for (let i = 0; i < insns.length; i++) w.u16(insns[i]);
+      if (tries.length > 0) {
+        if (insns.length % 2 !== 0) w.u16(0); // padding перед tries
+        let handlerRelOff = 1;
+        const handlerBytes = new ByteWriter(32);
+        writeULEB128(handlerBytes, tries.length);
+        const tryItems = [];
+        for (const tr of tries) {
+          const startAddr = m.code.labels.get(tr.startLabel);
+          const endAddr = m.code.labels.get(tr.endLabel);
+          const catchAddr = m.code.labels.get(tr.catchAllLabel);
+          tryItems.push({ startAddr, insnCount: endAddr - startAddr, handlerOff: handlerRelOff });
+          const startPos = handlerBytes.pos;
+          writeSLEB128(handlerBytes, 0); // 0 = только catch_all
+          writeULEB128(handlerBytes, catchAddr);
+          handlerRelOff += (handlerBytes.pos - startPos);
+        }
+        for (const ti of tryItems) {
+          w.u32(ti.startAddr);
+          w.u16(ti.insnCount);
+          w.u16(ti.handlerOff);
+        }
+        w.bytes(handlerBytes.toUint8Array());
+      }
+    }
+  }
+  // Запись аннотаций @JavascriptInterface для JsBridge
+  w.align(4);
+  const jsAnnItemOff = w.pos;
+  w.u8(0x02); // VISIBILITY_RUNTIME
+  writeULEB128(w, typeIdx(T_JS_ANN));
+  writeULEB128(w, 0); // 0 элементов аннотации
+
+  w.align(4);
+  const jsAnnSetOff = w.pos;
+  w.u32(1);
+  w.u32(jsAnnItemOff);
+
+  for (const cp of classPatches) {
+    if (cp.cd.jsAnnotatedMethods.length > 0) {
+      w.align(4);
+      w.patchU32(cp.annPatchPos, w.pos);
+      w.u32(0); // class_annotations_off
+      w.u32(0); // fields_size
+      const sortedAnnMethods = cp.cd.jsAnnotatedMethods
+        .slice()
+        .sort((a, c) => methodIdx(a) - methodIdx(c));
+      w.u32(sortedAnnMethods.length); // annotated_methods_size
+      w.u32(0); // annotated_parameters_size
+      for (const mKey of sortedAnnMethods) {
+        w.u32(methodIdx(mKey));
+        w.u32(jsAnnSetOff);
+      }
+    }
+  }
+
+  // Запись string_data_item
+  for (let i = 0; i < sortedStrings.length; i++) {
+    w.patchU32(stringIdsOff + i * 4, w.pos);
+    w.bytes(encodeMUTF8WithLen(sortedStrings[i]));
+  }
+
+  // Запись class_data_item
+  for (const { dataPatchPos, cd } of classPatches) {
+    w.patchU32(dataPatchPos, w.pos);
+    writeULEB128(w, 0);
+    writeULEB128(w, cd.instFields.length);
+    writeULEB128(w, cd.directMethods.length);
+    writeULEB128(w, cd.virtualMethods.length);
+
+    let prevField = 0;
+    const sortedInst = cd.instFields.slice().sort((a, c) => fieldIdx(a.field) - fieldIdx(c.field));
+    for (const f of sortedInst) {
+      const idx = fieldIdx(f.field);
+      writeULEB128(w, idx - prevField);
+      writeULEB128(w, f.access);
+      prevField = idx;
+    }
+
+    const writeMethods = (list) => {
+      let prevM = 0;
+      const sortedM = list.slice().sort((a, c) => methodIdx(a.method) - methodIdx(c.method));
+      for (const m of sortedM) {
+        const idx = methodIdx(m.method);
+        writeULEB128(w, idx - prevM);
+        writeULEB128(w, m.access);
+        writeULEB128(w, codeOffsets.get(m.method));
+        prevM = idx;
+      }
+    };
+    writeMethods(cd.directMethods);
+    writeMethods(cd.virtualMethods);
+  }
+
+  // Запись map_list
+  w.align(4);
+  const mapOff = w.pos;
+  const mapItems = [
+    { type: 0x0000, size: 1, off: 0 },
+    { type: 0x0001, size: sortedStrings.length, off: stringIdsOff },
+    { type: 0x0002, size: sortedTypes.length, off: typeIdsOff },
+    { type: 0x0003, size: sortedProtos.length, off: protoIdsOff },
+    { type: 0x0004, size: sortedFields.length, off: fieldIdsOff },
+    { type: 0x0005, size: sortedMethods.length, off: methodIdsOff },
+    { type: 0x0006, size: classDefs.length, off: classDefsOff },
+    { type: 0x1000, size: 1, off: mapOff }
+  ];
+  w.u32(mapItems.length);
+  for (const item of mapItems) {
+    w.u16(item.type);
+    w.u16(0);
+    w.u32(item.size);
+    w.u32(item.off);
+  }
+
+  const fileSize = w.pos;
+  const dataSize = fileSize - dataOff;
+
+  // Заголовок DEX 035
+  const magic = [0x64, 0x65, 0x78, 0x0a, 0x30, 0x33, 0x35, 0x00];
+  for (let i = 0; i < 8; i++) w.buf[i] = magic[i];
+  w.patchU32(32, fileSize);
+  w.patchU32(36, 0x70);
+  w.patchU32(40, 0x12345678);
+  w.patchU32(52, mapOff);
+  w.patchU32(56, sortedStrings.length);
+  w.patchU32(60, stringIdsOff);
+  w.patchU32(64, sortedTypes.length);
+  w.patchU32(68, typeIdsOff);
+  w.patchU32(72, sortedProtos.length);
+  w.patchU32(76, protoIdsOff);
+  w.patchU32(80, sortedFields.length);
+  w.patchU32(84, fieldIdsOff);
+  w.patchU32(88, sortedMethods.length);
+  w.patchU32(92, methodIdsOff);
+  w.patchU32(96, classDefs.length);
+  w.patchU32(100, classDefsOff);
+  w.patchU32(104, dataSize);
+  w.patchU32(108, dataOff);
+
+  const dexBytes = w.toUint8Array();
+  const sha1 = await sha1Bytes(dexBytes.subarray(32));
+  dexBytes.set(sha1, 12);
+  const checksum = adler32(dexBytes, 12);
+  new DataView(dexBytes.buffer).setUint32(8, checksum, true);
+
+  return dexBytes;
+}
+// ============================================================================
+// ZIP-УПАКОВЩИК APK (STORE, 4-БАЙТОВОЕ ВЫРАВНИВАНИЕ ДЛЯ RESOURCES.ARSC)
+// ============================================================================
+
+function buildApkZip(entries) {
+  // entries: [{ name: string, data: Uint8Array, align4?: boolean }]
+  const out = new ByteWriter(65536);
+  const centralDir = [];
+
+  for (const entry of entries) {
+    const nameBytes = encodeUTF8(entry.name);
+    const localHeaderOffset = out.pos;
+
+    // Выравнивание начала данных файла по границе 4 байт через поле extra в Local File Header
+    let extraLen = 0;
+    if (entry.align4) {
+      const dataStartWithoutExtra = localHeaderOffset + 30 + nameBytes.length;
+      const rem = dataStartWithoutExtra % 4;
+      if (rem !== 0) extraLen = 4 - rem;
+    }
+
+    const crc = crc32(entry.data);
+    const size = entry.data.length;
+
+    // Local File Header (30 байт + name + extra)
+    out.u32(0x04034b50); // Local file header signature
+    out.u16(20);         // Version needed to extract (2.0)
+    out.u16(0x0800);     // General purpose bit flag (UTF-8 filename)
+    out.u16(0);          // Compression method: 0 = STORE (без сжатия)
+    out.u16(0);          // File last modification time
+    out.u16(0x0021);     // File last modification date
+    out.u32(crc);        // CRC-32
+    out.u32(size);       // Compressed size
+    out.u32(size);       // Uncompressed size
+    out.u16(nameBytes.length);
+    out.u16(extraLen);
+    out.bytes(nameBytes);
+    if (extraLen > 0) out.zeros(extraLen);
+    out.bytes(entry.data);
+
+    centralDir.push({
+      nameBytes,
+      crc,
+      size,
+      localHeaderOffset
+    });
+  }
+
+  const cdOffset = out.pos;
+  for (const item of centralDir) {
+    out.u32(0x02014b50); // Central directory file header signature
+    out.u16(20);         // Version made by
+    out.u16(20);         // Version needed to extract
+    out.u16(0x0800);     // General purpose bit flag (UTF-8)
+    out.u16(0);          // Compression method: STORE
+    out.u16(0);          // Mod time
+    out.u16(0x0021);     // Mod date
+    out.u32(item.crc);
+    out.u32(item.size);
+    out.u32(item.size);
+    out.u16(item.nameBytes.length);
+    out.u16(0);          // Extra field length
+    out.u16(0);          // File comment length
+    out.u16(0);          // Disk number start
+    out.u16(0);          // Internal file attributes
+    out.u32(0);          // External file attributes
+    out.u32(item.localHeaderOffset);
+    out.bytes(item.nameBytes);
+  }
+
+  const cdSize = out.pos - cdOffset;
+
+  // End of Central Directory Record (EOCD - 22 байта)
+  out.u32(0x06054b50);
+  out.u16(0); // Number of this disk
+  out.u16(0); // Disk where central directory starts
+  out.u16(centralDir.length);
+  out.u16(centralDir.length);
+  out.u32(cdSize);
+  out.u32(cdOffset);
+  out.u16(0); // ZIP file comment length
+
+  return out.toUint8Array();
+}
+// ============================================================================
+// КАТАЛОГ РАЗРЕШЕНИЙ ANDROID 5–16+ (46 РАЗРЕШЕНИЙ ПО КАТЕГОРИЯМ)
+// ============================================================================
+
+const PERMISSION_GROUPS = [
+  {
+    title: "Сеть и подключения",
+    items: [
+      { id: "android.permission.INTERNET", label: "Полный доступ в интернет", checked: true },
+      { id: "android.permission.ACCESS_NETWORK_STATE", label: "Просмотр состояния сети (Wi-Fi / сотовая)", checked: true },
+      { id: "android.permission.ACCESS_WIFI_STATE", label: "Просмотр состояния Wi-Fi" },
+      { id: "android.permission.CHANGE_WIFI_STATE", label: "Управление подключением Wi-Fi" },
+      { id: "android.permission.CHANGE_NETWORK_STATE", label: "Изменение состояния сетевого подключения" }
+    ]
+  },
+  {
+    title: "Камера и аудио",
+    items: [
+      { id: "android.permission.CAMERA", label: "Камера (фото, видео, WebRTC, QR)" },
+      { id: "android.permission.RECORD_AUDIO", label: "Запись звука с микрофона (WebRTC, голос)" },
+      { id: "android.permission.MODIFY_AUDIO_SETTINGS", label: "Изменение настроек аудио / громкости" }
+    ]
+  },
+  {
+    title: "Геолокация",
+    items: [
+      { id: "android.permission.ACCESS_FINE_LOCATION", label: "Точное местоположение (GPS)" },
+      { id: "android.permission.ACCESS_COARSE_LOCATION", label: "Приблизительное местоположение (сеть)" },
+      { id: "android.permission.ACCESS_BACKGROUND_LOCATION", label: "Геолокация в фоновом режиме (Android 10+)" }
+    ]
+  },
+  {
+    title: "Файлы, хранилище и медиа (Android 5–16+)",
+    items: [
+      { id: "android.permission.READ_EXTERNAL_STORAGE", label: "Чтение памяти устройства (Android 5–12)" },
+      { id: "android.permission.WRITE_EXTERNAL_STORAGE", label: "Запись в память устройства (Android 5–10)" },
+      { id: "android.permission.MANAGE_EXTERNAL_STORAGE", label: "Доступ ко всем файлам (Android 11+)" },
+      { id: "android.permission.READ_MEDIA_IMAGES", label: "Чтение изображений и фото (Android 13+)" },
+      { id: "android.permission.READ_MEDIA_VIDEO", label: "Чтение видеофайлов (Android 13+)" },
+      { id: "android.permission.READ_MEDIA_AUDIO", label: "Чтение аудиофайлов (Android 13+)" },
+      { id: "android.permission.READ_MEDIA_VISUAL_USER_SELECTED", label: "Выборочный доступ к фото/видео (Android 14+)" }
+    ]
+  },
+  {
+    title: "Bluetooth, NFC и устройства рядом",
+    items: [
+      { id: "android.permission.BLUETOOTH", label: "Bluetooth (Android 5–11)" },
+      { id: "android.permission.BLUETOOTH_ADMIN", label: "Управление Bluetooth (Android 5–11)" },
+      { id: "android.permission.BLUETOOTH_CONNECT", label: "Подключение к устройствам Bluetooth (Android 12+)" },
+      { id: "android.permission.BLUETOOTH_SCAN", label: "Поиск устройств Bluetooth (Android 12+)" },
+      { id: "android.permission.BLUETOOTH_ADVERTISE", label: "Обнаружение устройства по Bluetooth (Android 12+)" },
+      { id: "android.permission.NEARBY_WIFI_DEVICES", label: "Устройства Wi-Fi поблизости (Android 13+)" },
+      { id: "android.permission.NFC", label: "Обмен данными по NFC" }
+    ]
+  },
+  {
+    title: "Уведомления, фон и система",
+    items: [
+      { id: "android.permission.POST_NOTIFICATIONS", label: "Отправка Push-уведомлений (Android 13+)" },
+      { id: "android.permission.VIBRATE", label: "Управление виброоткликом", checked: true },
+      { id: "android.permission.WAKE_LOCK", label: "Предотвращение перехода в спящий режим" },
+      { id: "android.permission.FOREGROUND_SERVICE", label: "Работа фоновых служб (Foreground Service)" },
+      { id: "android.permission.FOREGROUND_SERVICE_DATA_SYNC", label: "Фоновая синхронизация данных (Android 14+)" },
+      { id: "android.permission.RECEIVE_BOOT_COMPLETED", label: "Запуск при включении устройства" },
+      { id: "android.permission.SYSTEM_ALERT_WINDOW", label: "Отображение поверх других окон" },
+      { id: "android.permission.REQUEST_INSTALL_PACKAGES", label: "Запрос установки APK-пакетов" },
+      { id: "android.permission.SCHEDULE_EXACT_ALARM", label: "Точные будильники и планировщик (Android 12+)" }
+    ]
+  },
+  {
+    title: "Контакты, звонки, SMS и биометрия",
+    items: [
+      { id: "android.permission.READ_CONTACTS", label: "Чтение контактов" },
+      { id: "android.permission.WRITE_CONTACTS", label: "Изменение и добавление контактов" },
+      { id: "android.permission.CALL_PHONE", label: "Совершение телефонных звонков" },
+      { id: "android.permission.READ_PHONE_STATE", label: "Чтение статуса телефона и сети" },
+      { id: "android.permission.SEND_SMS", label: "Отправка SMS-сообщений" },
+      { id: "android.permission.READ_SMS", label: "Чтение SMS-сообщений" },
+      { id: "android.permission.READ_CALENDAR", label: "Чтение событий календаря" },
+      { id: "android.permission.WRITE_CALENDAR", label: "Добавление событий в календарь" },
+      { id: "android.permission.USE_BIOMETRIC", label: "Биометрическая аутентификация (отпечаток / лицо)" },
+      { id: "android.permission.BODY_SENSORS", label: "Датчики тела и пульса" },
+      { id: "android.permission.ACTIVITY_RECOGNITION", label: "Распознавание физической активности (шагомер)" }
+    ]
+  }
+];
+
+const customPermissions = new Set();
+
+function renderPermissions() {
+  const container = document.getElementById("permContainer");
+  container.innerHTML = "";
+
+  for (const group of PERMISSION_GROUPS) {
+    const groupWrap = document.createElement("div");
+    groupWrap.className = "perm-group";
+
+    const titleEl = document.createElement("div");
+    titleEl.className = "perm-group-title";
+    titleEl.textContent = group.title;
+    groupWrap.appendChild(titleEl);
+
+    const gridEl = document.createElement("div");
+    gridEl.className = "checkbox-grid";
+
+    for (const item of group.items) {
+      const labelEl = document.createElement("label");
+      labelEl.className = "cb-item perm-item";
+      labelEl.dataset.search = (item.label + " " + item.id).toLowerCase();
+
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.value = item.id;
+      cb.checked = !!item.checked;
+      cb.addEventListener("change", updatePermCounter);
+
+      const textDiv = document.createElement("div");
+      textDiv.innerHTML = `${item.label}<span class="cb-sub">${item.id}</span>`;
+
+      labelEl.appendChild(cb);
+      labelEl.appendChild(textDiv);
+      gridEl.appendChild(labelEl);
+    }
+
+    groupWrap.appendChild(gridEl);
+    container.appendChild(groupWrap);
+  }
+  updatePermCounter();
+}
+
+function getSelectedPermissions() {
+  const checked = Array.from(document.querySelectorAll("#permContainer input[type='checkbox']:checked"))
+    .map((cb) => cb.value);
+  return Array.from(new Set([...checked, ...customPermissions]));
+}
+
+function updatePermCounter() {
+  document.getElementById("permCounter").textContent = "Выбрано: " + getSelectedPermissions().length;
+}
+
+function renderCustomPermTags() {
+  const box = document.getElementById("customPermTags");
+  box.innerHTML = "";
+  for (const perm of customPermissions) {
+    const tag = document.createElement("span");
+    tag.className = "tag";
+    tag.textContent = perm + " ";
+    const delBtn = document.createElement("button");
+    delBtn.type = "button";
+    delBtn.textContent = "×";
+    delBtn.title = "Удалить";
+    delBtn.onclick = () => {
+      customPermissions.delete(perm);
+      renderCustomPermTags();
+      updatePermCounter();
+    };
+    tag.appendChild(delBtn);
+    box.appendChild(tag);
+  }
+  updatePermCounter();
+}
+// ============================================================================
+// ЛОГИКА ПОЛЬЗОВАТЕЛЬСКОГО ИНТЕРФЕЙСА И СБОРКА TEMPLATE.APK
+// ============================================================================
+
+function validatePackageName(pkg) {
+  return /^[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z][a-zA-Z0-9_]*)+$/.test(pkg);
+}
+
+function logMsg(text, cls = "") {
+  const box = document.getElementById("logBox");
+  const line = document.createElement("div");
+  if (cls) line.className = cls;
+  const now = new Date().toLocaleTimeString();
+  line.textContent = `[${now}] ${text}`;
+  box.appendChild(line);
+  box.scrollTop = box.scrollHeight;
+}
+
+// Генерация случайного Package Name
+document.getElementById("btnGenPkg").addEventListener("click", () => {
+  const rnd = Math.floor(100000 + Math.random() * 900000);
+  const input = document.getElementById("pkgName");
+  input.value = `com.app.id${rnd}`;
+  document.getElementById("pkgError").style.display = "none";
+});
+
+document.getElementById("pkgName").addEventListener("input", (e) => {
+  const valid = validatePackageName(e.target.value.trim());
+  document.getElementById("pkgError").style.display = valid ? "none" : "block";
+});
+
+// Пресеты User-Agent
+document.getElementById("uaPreset").addEventListener("change", (e) => {
+  const customInput = document.getElementById("customUa");
+  if (e.target.value === "custom") {
+    customInput.focus();
+  } else {
+    customInput.value = e.target.value;
+  }
+});
+
+// Поиск по разрешениям
+document.getElementById("permSearch").addEventListener("input", (e) => {
+  const q = e.target.value.trim().toLowerCase();
+  document.querySelectorAll(".perm-group").forEach((group) => {
+    let visibleCount = 0;
+    group.querySelectorAll(".perm-item").forEach((item) => {
+      const match = !q || item.dataset.search.includes(q);
+      item.style.display = match ? "flex" : "none";
+      if (match) visibleCount++;
+    });
+    group.style.display = visibleCount > 0 ? "block" : "none";
+  });
+});
+
+function applyPermissionPreset(ids) {
+  const set = new Set(ids);
+  document.querySelectorAll("#permContainer input[type='checkbox']").forEach((cb) => {
+    cb.checked = set.has(cb.value);
+  });
+  updatePermCounter();
+}
+
+document.getElementById("btnPresetNet").addEventListener("click", () => {
+  applyPermissionPreset([
+    "android.permission.INTERNET",
+    "android.permission.ACCESS_NETWORK_STATE",
+    "android.permission.VIBRATE"
+  ]);
+});
+
+document.getElementById("btnPresetMedia").addEventListener("click", () => {
+  applyPermissionPreset([
+    "android.permission.INTERNET",
+    "android.permission.ACCESS_NETWORK_STATE",
+    "android.permission.VIBRATE",
+    "android.permission.CAMERA",
+    "android.permission.RECORD_AUDIO",
+    "android.permission.MODIFY_AUDIO_SETTINGS",
+    "android.permission.ACCESS_FINE_LOCATION",
+    "android.permission.ACCESS_COARSE_LOCATION",
+    "android.permission.READ_EXTERNAL_STORAGE",
+    "android.permission.READ_MEDIA_IMAGES",
+    "android.permission.READ_MEDIA_VIDEO",
+    "android.permission.READ_MEDIA_AUDIO"
+  ]);
+});
+
+document.getElementById("btnPresetMax").addEventListener("click", () => {
+  const allIds = [];
+  for (const g of PERMISSION_GROUPS) {
+    for (const item of g.items) allIds.push(item.id);
+  }
+  applyPermissionPreset(allIds);
+});
+
+document.getElementById("btnPresetNone").addEventListener("click", () => {
+  applyPermissionPreset([]);
+  customPermissions.clear();
+  renderCustomPermTags();
+});
+
+// Добавление кастомного разрешения вручную
+document.getElementById("btnAddCustomPerm").addEventListener("click", () => {
+  const input = document.getElementById("customPermInput");
+  const val = input.value.trim();
+  if (!val) return;
+  customPermissions.add(val);
+  input.value = "";
+  renderCustomPermTags();
+});
+
+// Главная кнопка сборки APK
+document.getElementById("btnBuildApk").addEventListener("click", async () => {
+  const logBox = document.getElementById("logBox");
+  logBox.innerHTML = "";
+
+  const packageName = document.getElementById("pkgName").value.trim();
+  if (!validatePackageName(packageName)) {
+    document.getElementById("pkgError").style.display = "block";
+    logMsg("Ошибка: некорректный Package Name!", "log-err");
+    return;
+  }
+
+  const cfg = {
+    packageName,
+    appName: document.getElementById("appName").value.trim() || "WebApp Shell",
+    versionCode: Math.max(1, parseInt(document.getElementById("versionCode").value, 10) || 1),
+    versionName: document.getElementById("versionName").value.trim() || "1.0.0",
+    minSdk: parseInt(document.getElementById("minSdk").value, 10) || 21,
+    targetSdk: parseInt(document.getElementById("targetSdk").value, 10) || 34,
+    allowBackup: document.getElementById("optAllowBackup").checked,
+    theme: document.getElementById("themeSelect").value,
+    orientation: document.getElementById("orientationSelect").value,
+    softInput: document.getElementById("softInputSelect").value,
+    statusBarColor: document.getElementById("statusBarColor").value || "#0b0d13",
+    navBarColor: document.getElementById("navBarColor").value || "#0b0d13",
+    fullscreen: document.getElementById("optFullscreen").checked,
+    immersive: document.getElementById("optImmersive").checked,
+    cutout: document.getElementById("optCutout").checked,
+    keepScreen: document.getElementById("optKeepScreen").checked,
+    secure: document.getElementById("optSecure").checked,
+    hwAccel: document.getElementById("optHwAccel").checked,
+    cleartext: document.getElementById("optCleartext").checked,
+    viewMode: document.getElementById("viewMode").value,
+    startUrl: document.getElementById("startUrl").value.trim() || "file:///android_asset/www/index.html",
+    customUa: document.getElementById("customUa").value.trim(),
+    cacheMode: parseInt(document.getElementById("cacheMode").value, 10),
+    wvBridge: document.getElementById("wvBridge").checked,
+    wvStripWv: document.getElementById("wvStripWv").checked,
+    wvDebug: document.getElementById("wvDebug").checked,
+    wvZoom: document.getElementById("wvZoom").checked,
+    wvMixed: document.getElementById("wvMixed").checked,
+    wvExternal: document.getElementById("wvExternal").checked,
+    wvDownloads: document.getElementById("wvDownloads").checked,
+    deepScheme: document.getElementById("deepScheme").value.trim().toLowerCase(),
+    deepHost: document.getElementById("deepHost").value.trim().toLowerCase(),
+    intShare: document.getElementById("intShare").checked,
+    intBrowser: document.getElementById("intBrowser").checked,
+    intHome: document.getElementById("intHome").checked,
+    permissions: getSelectedPermissions()
+  };
+
+  try {
+    const t0 = performance.now();
+    logMsg(`Старт автономной сборки template.apk для пакета: ${cfg.packageName}`);
+    logMsg(`Параметры SDK: minSdk=${cfg.minSdk}, targetSdk=${cfg.targetSdk}, versionCode=${cfg.versionCode} (${cfg.versionName})`);
+
+    // 1. Генерация PNG-иконки
+    const iconBytes = await generateIconPng(cfg.appName);
+    logMsg(`1/4 res/mipmap-xxxhdpi/ic_launcher.png сгенерирован (${iconBytes.length} байт, 192x192 PNG)`, "log-ok");
+
+    // 2. Генерация resources.arsc
+    const arscBytes = buildResourcesArsc(cfg.packageName, cfg.appName);
+    logMsg(`2/4 resources.arsc синтезирован (${arscBytes.length} байт, packageId=0x7f, UTF-16LE)`, "log-ok");
+
+    // 3. Генерация бинарного AndroidManifest.xml
+    const manifestBytes = buildBinaryManifest(cfg);
+    logMsg(`3/4 AndroidManifest.xml (AXML 0x00080003) собран (${manifestBytes.length} байт, разрешений: ${cfg.permissions.length})`, "log-ok");
+
+    // 4. Генерация скомпилированного classes.dex
+    const dexBytes = await buildClassesDex();
+    const dexView = new DataView(dexBytes.buffer);
+    const adlerHex = "0x" + dexView.getUint32(8, true).toString(16).padStart(8, "0");
+    logMsg(`4/4 classes.dex (Dalvik 035, 5 классов, @JavascriptInterface, Adler-32=${adlerHex}) собран (${dexBytes.length} байт)`, "log-ok");
+
+    // 5. Упаковка в ZIP (template.apk) с 4-байтовым выравниванием resources.arsc
+    const apkBytes = buildApkZip([
+      { name: "AndroidManifest.xml", data: manifestBytes, align4: false },
+      { name: "resources.arsc", data: arscBytes, align4: true },
+      { name: "classes.dex", data: dexBytes, align4: false },
+      { name: "res/mipmap-xxxhdpi/ic_launcher.png", data: iconBytes, align4: false }
+    ]);
+
+    const elapsed = (performance.now() - t0).toFixed(1);
+    logMsg(`------------------------------------------------------------`);
+    logMsg(`Готово за ${elapsed} мс! Итоговый размер template.apk: ${apkBytes.length} байт`, "log-ok");
+    logMsg(`Структура архива: AndroidManifest.xml, resources.arsc (4-byte aligned), classes.dex, res/mipmap-xxxhdpi/ic_launcher.png`);
+
+    // Скачивание файла
+    const blob = new Blob([apkBytes], { type: "application/vnd.android.package-archive" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "template.apk";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+  } catch (err) {
+    console.error(err);
+    logMsg(`Критическая ошибка сборки: ${err.message}`, "log-err");
+  }
+});
+
+// Инициализация списка разрешений при загрузке
+renderPermissions();
+</script>
+</body>
+</html>

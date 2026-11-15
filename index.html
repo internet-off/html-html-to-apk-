@@ -73,6 +73,13 @@
     <label class="title">4. Название приложения на рабочем столе</label>
     <input type="text" id="app-label" value="Мой Браузер" placeholder="Например: Мой Браузер">
   </div>
+  <div class="field">
+    <label class="title">4.5. Имя пакета (Package Name — уникальное ID приложения)</label>
+    <div class="url-row" style="margin-top:0">
+      <input type="text" id="pkg-name" value="com.html.app" placeholder="Например: com.my.app">
+      <button type="button" class="btn-small" onclick="genPkg()">🎲 Случайный</button>
+    </div>
+  </div>
 
   <div class="field">
     <label class="title">5. Имя скачиваемого APK-файла (без .apk)</label>
@@ -388,7 +395,8 @@
   }
 
   // --- УНИВЕРСАЛЬНЫЙ ПАТЧЕР ANDROIDMANIFEST.XML (AXML) ---
-  function patchManifestUniversal(manifestBytes, newLabel) {
+  function genPkg() { document.getElementById('pkg-name').value = 'com.app.id' + Math.floor(100000 + Math.random() * 900000); }
+  function patchManifestUniversal(manifestBytes, newLabel, newPkg) {
     const view = new DataView(manifestBytes.buffer, manifestBytes.byteOffset, manifestBytes.byteLength);
     if (view.getUint32(0, true) !== 0x00080003) {
       log('⚠️ Нестандартный заголовок манифеста, пропускаем патч AXML');
@@ -412,7 +420,7 @@
       pos += chunkSize;
     }
 
-    if (stringPoolStart === -1 || !newLabel) return manifestBytes;
+    if (stringPoolStart === -1 || (!newLabel && !newPkg)) return manifestBytes;
 
     let labelAttrNameIdx = -1;
     if (resourceMapStart !== -1) {
@@ -460,6 +468,7 @@
     }
     // Ищем точные индексы строк, используемых в android:label внутри <application> или <activity>
     const targetStringIndices = new Set();
+    let pkgStringIndex = -1;
     let hasResourceLabel = false;
 
     pos = 8;
@@ -469,6 +478,7 @@
       if (chunkType === 0x0102) { // START_TAG
         const tagNameIdx = view.getUint32(pos + 20, true);
         const tagName = strings[tagNameIdx];
+        if (tagName === 'manifest') { const ac = view.getUint16(pos + 28, true); let ap = pos + 36; for (let a = 0; a < ac; a++) { const ni = view.getUint32(ap + 4, true), vt = manifestBytes[ap + 15], vd = view.getUint32(ap + 16, true); if (strings[ni] === 'package' && vt === 0x03 && newPkg) pkgStringIndex = vd; ap += 20; } }
         if (tagName === 'application' || tagName === 'activity') {
           const attrCount = view.getUint16(pos + 28, true);
           let attrPos = pos + 36;
@@ -492,14 +502,15 @@
       pos += chunkSize;
     }
 
-    if (targetStringIndices.size === 0) {
+    if (pkgStringIndex !== -1 && newPkg) { log('Заменен пакет в манифесте: ' + strings[pkgStringIndex] + ' -> ' + newPkg); strings[pkgStringIndex] = newPkg; }
+    if (targetStringIndices.size === 0 && pkgStringIndex === -1) {
       if (hasResourceLabel) {
         log('ℹ️ В шаблоне имя приложения задано через @string/app_name (resources.arsc) — оставлено без изменений во избежание поломки таблицы ресурсов.');
       }
       return manifestBytes;
     }
 
-    for (const idx of targetStringIndices) {
+    for (const idx of targetStringIndices) { if (!newLabel) continue;
       log('Заменено имя в манифесте: "' + strings[idx] + '" → "' + newLabel + '"');
       strings[idx] = newLabel;
     }
